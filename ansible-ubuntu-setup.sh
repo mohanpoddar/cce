@@ -248,15 +248,11 @@ configure_ansible () {
         cat << EOF >> $ansible_inv_file
 # Customized Hosts
 [ubuntuservers]
-mylearnersepoint
-mylearnersepoint1
+cce
 
-[redhatservers]
-learnersepointrhel7
-learnersepointrhel8
-learnersepoint
 EOF
        grep -A3 ubuntuservers /etc/ansible/hosts
+       ansible -m ping localhost
        ansible -m ping all
        fi
     fi
