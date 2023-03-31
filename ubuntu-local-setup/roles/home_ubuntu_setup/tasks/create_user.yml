@@ -1,0 +1,16 @@
+---
+- name: Add user.
+  user:
+    name: "{{ username }}"
+    shell: /bin/bash
+    groups: adm,cdrom,sudo,dip,plugdev,lpadmin,lxd
+    password: "$6$z7ySCKJEMojTG4P9$dTcclU07ETfwoNNrYm8RjYb7ff0EBQjM7vqgraOFxiiA.yJTxSpI3Ld3.xXOoAPZvCi6DVrO.s9l3GjkWj3Kj0"
+    append: yes
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+  register: create_user
+  # when: username is defined
+
+- debug:
+    var: create_user

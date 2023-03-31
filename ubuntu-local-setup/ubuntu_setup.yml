@@ -1,0 +1,15 @@
+---
+- hosts: all,localhost
+  # connection: local
+  gather_facts: true
+
+# Playbook pre tasks
+  pre_tasks:
+    - name: Display Hostname
+      debug: var=ansible_hostname
+
+# # Add playbook roles
+  roles:
+  - role: home_ubuntu_setup
+  - onedrive_install
+  - samba

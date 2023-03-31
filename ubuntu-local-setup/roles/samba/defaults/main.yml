@@ -1,0 +1,34 @@
+---
+# defaults file for samba
+
+samba_workgroup: "WORKGROUP"
+samba_log_size: 5000
+
+
+# samba_shares: []
+samba_shares_root: "/opt/cce/ccedata"
+first_samba_shares:
+  - sharename: first_cce_share_name
+    comment: "cce first data share"
+    browseable: "yes"
+    read_only: "no"
+    writable: "yes"
+    guest_ok: "no"
+    valid_users: cce
+    group: cce
+    shardirname: first_cce_share_dir
+
+second_samba_shares:
+  - sharename: second_cce_share_name
+    comment: "cce second data share"
+    browseable: "yes"
+    read_only: "no"
+    writable: "yes"
+    guest_ok: "no"
+    valid_users: cce
+    group: cce
+    shardirname: second_cce_share_dir
+
+samba_users:
+  - name: cce
+    password: cce

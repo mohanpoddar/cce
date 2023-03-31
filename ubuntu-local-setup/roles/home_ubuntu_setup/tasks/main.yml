@@ -1,0 +1,17 @@
+---
+# tasks file for home_ubuntu_setup
+
+# Include palybook tasks
+#The loop_control parameter with loop_var can be used to define your own variable for each item in the list. 
+#In this example, the files variable is used for each item in the list instead of the {{ item }} variable.
+- include_tasks: '{{ playbook }}'
+  with_items:
+    - create_user.yml
+    - install_packages.yml
+    - fix_grub.yml
+  loop_control:
+    loop_var: playbook
+
+
+
+

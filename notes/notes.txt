@@ -1,0 +1,21 @@
+
+
+Step-01: Become root
+$ sudo su - root
+
+Step-02: Install git package
+# sudo apt install git
+
+Step-03: Clone the code and stay in current directory.
+# git clone git@github.com:mohanpoddar/celestial.git
+
+Step-04: Run below command from root.
+o - For original user while creating the os
+u - creating new user ex. devopsadmin
+
+Run below command with your system default user created at build time
+$ bash celestial/celestial/ansible-ubuntu-setup.sh -u devopsadmin -o celestial
+
+Step-02: Take final reboot
+
+

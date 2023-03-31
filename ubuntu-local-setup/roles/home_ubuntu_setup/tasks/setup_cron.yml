@@ -1,0 +1,37 @@
+---
+# Tasks - Copy keys for user - root
+# Tasks - Copy root private key to user devopsadmin home for ansible playbook run by devopsadmin with root previledge
+# - name: Copy resolv.conf
+#   copy:
+#     src: resolv.conf
+#     dest: /root/resolv.conf
+#     owner: root
+#     group: root
+#     mode: '0755'
+
+#*/1 * * * * /bin/cp /root/resolv.conf /etc/resolv.conf
+# Field    Description    Allowed Value
+# MIN      Minute field    0 to 59
+# HOUR     Hour field      0 to 23
+# DOM      Day of Month    1-31
+# MON      Month field     1-12
+# DOW      Day Of Week     0-6
+# CMD      Command         Any command to be executed.
+
+# - name: Creates resolv.conf cron file under /etc/cron.d
+#   ansible.builtin.cron:
+#     name: Setup resolv.conf    
+#     minute: "*/1"
+#     hour: "*"
+#     day: "*"
+#     month: "*"
+#     weekday: "*"
+#     user: root
+#     job: "/bin/cp /root/resolv.conf /etc/resolv.conf"
+#     cron_file: resolv_config
+
+# - name: sudo without password for devopsadmin user
+#   copy:
+#     content: 'devopsadmin ALL=(ALL) NOPASSWD:ALL'
+#     dest: /etc/sudoers.d/devopsadmin_sudo
+#     mode: 0440

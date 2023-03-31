@@ -1,0 +1,50 @@
+---
+# tasks file for samba
+
+- name: Include OS-specific Variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Inst - Update Repositories Cache
+  ansible.builtin.apt:
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+  tags: samba-inst-package
+
+- name: Inst - Samba Packages
+  ansible.builtin.package:
+    name: "{{ samba_packages }}"
+    state: "present"
+  tags: samba-inst-package
+
+- name: Conf - Samba
+  ansible.builtin.template:
+    dest: "{{ samba_configuration }}"
+    src: smb.conf.j2
+    validate: 'testparm -s %s'
+  notify:
+    - Restart Samba
+  tags:
+    - samba-conf
+
+- name: Create Samba user password
+  shell: (echo {{ item.password }}; echo {{ item.password }}) | smbpasswd -s -a {{ item.name }}
+  args:
+    executable: /bin/bash
+  with_items: "{{ samba_users }}"
+  no_log: true
+
+- name: Filter IP Address
+  debug:
+    var: ansible_all_ipv4_addresses[0]
+    
+- name: List Samba share
+  shell: echo {{ item.password }} | smbclient -L {{ ansible_all_ipv4_addresses[0] }} -U {{ item.name }}
+  with_items: "{{ samba_users }}"
+  no_log: true
+  register: list_share
+
+- debug:
+    var: list_share.results[0].stdout_lines
+
+

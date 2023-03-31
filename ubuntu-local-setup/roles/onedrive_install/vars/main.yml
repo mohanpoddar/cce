@@ -1,0 +1,5 @@
+---
+# vars file for onedrive_install
+
+onedrive_packages:
+  - "onedrive"

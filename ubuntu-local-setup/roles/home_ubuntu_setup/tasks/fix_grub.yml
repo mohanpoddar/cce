@@ -1,0 +1,10 @@
+---
+- name: Add grub customizer
+  shell: add-apt-repository ppa:danielrichter2007/grub-customizer
+
+- name: Update grub
+  shell: apt update
+
+- name: Install grub-customizer
+  apt:
+    pkg: grub-customizer

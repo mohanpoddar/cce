@@ -7,25 +7,7 @@ echo "Job Start Time : $start_time"
 
 echo -e "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
-#Varaible for hosts file 
-hosts_file=/etc/hosts
-lepoint=$(grep -w ansible_mylearnersepoint $hosts_file | awk '{print $5}')
-lepoint1=$(grep -w ansible_mylearnersepoint1 $hosts_file | awk '{print $5}')
-
-#Varaible for linudata
-create_mydata=/media/devopsadmin/MyData/
-
-#Varaible for linudata
-create_linuxdata=/home/devopsadmin/linuxdata
-
-#Varaible for user home
-src_user_home_data=/media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/Training/ubuntu
-src_user_devopsadmin_home_data=devopsadmin-user-home
-src_user_root_home_data=root-user-home
-dst_devopsadmin_home=/home/devopsadmin
-dst_root_home=/root
-
-#Varaible for ssh configuration
+# #Varaible for ssh configuration
 ssh_service=/lib/systemd/system/ssh.service
 ssh_config=/etc/ssh/sshd_config
 
@@ -33,16 +15,27 @@ ssh_config=/etc/ssh/sshd_config
 ansible_config_file=/etc/ansible/ansible.cfg
 ansible_inv_file=/etc/ansible/hosts
 
-PLAYBOOK=/media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/ansible/ansible-my-works/ubuntu-local-setup/ubuntu_setup.yml
-key=/home/devopsadmin/.ssh/root_id_rsa 
-#ANSIBLE_CMD=/media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/ansible/ansible-my-works/ubuntu-local-setup/venv_ubuntu_ansible/bin/ansible-playbook
+PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
 ANSIBLE_CMD=/usr/local/bin/ansible-playbook
+
+while getopts h:o:u: option
+do 
+    case "${option}"
+        in
+        h)hostname=${OPTARG};;
+        o)orgusername=${OPTARG};;
+        u)username=${OPTARG};;
+    esac
+done
+
+apt upgrade -y
+apt-get update
 
 # Install basic initial packages
 pkg_install () {
     echo "Function pkg_install begins......."
     #Declare a package array
-    pkg_list=("vim" "pip" "mlocate")
+    pkg_list=("vim" "pip" "mlocate" "nfs-common"    )
     
     # Print array values in  lines
     echo "Print every element in new line"
@@ -53,103 +46,12 @@ pkg_install () {
     echo -e "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 }
 
-
-# Add hosts file
-add_host () {
-    echo "Function add_host begins......."
-    if [ "$lepoint" = "ansible_mylearnersepoint" ];
-    then
-        echo "$lepoint already exists in $hosts_file"
-    else
-        cat << EOF >> $hosts_file
-192.168.10.100           mylearnersepoint          mylearnersepoint.example.com	# ansible_mylearnersepoint
-EOF
-        host=$(grep -w 100 $hosts_file | awk '{print $2}')
-        if [ "$host" = "mylearnersepoint" ];
-        then
-            echo "Host $host added successfully"
-            grep -w 100 $hosts_file
-        else
-           echo "Failed to add $host"
-        fi
-    fi
-
-    if [ "$lepoint1" = "ansible_mylearnersepoint1" ];
-    then
-        echo "$lepoint1 already exists in $hosts_file"
-    else
-        cat << EOF >> $hosts_file
-192.168.10.101           mylearnersepoint1          mylearnersepoint1.example.com	# ansible_mylearnersepoint1
-EOF
-        host=$(grep -w 101 $hosts_file | awk '{print $2}')
-        if [ "$host" = "mylearnersepoint1" ];
-        then
-            echo "Host $host added successfully"
-            grep -w 101 $hosts_file
-        else
-           echo "Failed to add $host"
-        fi
-    fi
-    echo -e "\nFunction add_host ends......."
-    echo -e "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-}
-
-
-
-
-
-
 # Setup User account
 user_account_setup () {
 echo "Function user_account_setup begins......."
-# devopsadmin@mylearnersepoint:~$ cat .bashrc
-# alias myansible='sudo /media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/ansible/ansible-my-works/ubuntu-local-setup/venv_ubuntu_ansible/bin/ansible'
-# alias myansible-playbook='sudo /media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/ansible/ansible-my-works/ubuntu-local-setup/venv_ubuntu_ansible/bin/ansible-playbook'
-# export PATH="$HOME/bin:$PATH"
-#    cp -r $src_user_home_data/$src_user_devopsadmin_home_data/.ssh $dst_devopsadmin_home/.ssh
-
-# Setup devopsadmin user account
-    cp -r $src_user_home_data/$src_user_devopsadmin_home_data/.ssh $dst_devopsadmin_home/
-    chmod 700 $dst_devopsadmin_home/.ssh
-    chmod 664 $dst_devopsadmin_home/.ssh/authorized_keys
-    chmod 600 $dst_devopsadmin_home/.ssh/id_ecdsa
-    chmod 644 $dst_devopsadmin_home/.ssh/id_ecdsa.pub
-    chmod 600 $dst_devopsadmin_home/.ssh/id_rsa
-    chmod 644 $dst_devopsadmin_home/.ssh/id_rsa.pub
-    chmod 644 $dst_devopsadmin_home/.ssh/known_hosts
-    # cat /dev/null > $dst_devopsadmin_home/.ssh/known_hosts
-    chmod 600 $dst_devopsadmin_home/.ssh/root_id_rsa
-    chown -R devopsadmin:devopsadmin $dst_devopsadmin_home/.ssh
-    for i in `ls $dst_devopsadmin_home/.ssh` ; do ls -l $dst_devopsadmin_home/.ssh/$i; done
-
-    cp -r $src_user_home_data/$src_user_devopsadmin_home_data/bin $dst_devopsadmin_home/
-    chown -R devopsadmin:devopsadmin $dst_devopsadmin_home/bin
-
-    cp -r $src_user_home_data/$src_user_devopsadmin_home_data/.gitconfig $dst_devopsadmin_home/.gitconfig
-    chown devopsadmin:devopsadmin $dst_devopsadmin_home/.gitconfig
-    chmod 644 $dst_devopsadmin_home/.gitconfig
-
-    cp -r $src_user_home_data/$src_user_devopsadmin_home_data/.my.cnf $dst_devopsadmin_home/.my.cnf
-    chown devopsadmin:devopsadmin $dst_devopsadmin_home/.my.cnf
-    chmod 644 $dst_devopsadmin_home/.my.cnf
-
-    cp -r $src_user_home_data/$src_user_devopsadmin_home_data/.vimrc $dst_devopsadmin_home/.vimrc
-    chown devopsadmin:devopsadmin $dst_devopsadmin_home/.vimrc
-    chmod 644 $dst_devopsadmin_home/.vimrc
-
-# Setup root account
-    cp -r $src_user_home_data/$src_user_root_home_data/.ssh $dst_root_home/.ssh
-    chmod 700 $dst_root_home/.ssh
-    chmod 664 $dst_root_home/.ssh/authorized_keys
-    chmod 600 $dst_root_home/.ssh/id_rsa
-    chmod 644 $dst_root_home/.ssh/id_rsa.pub
-    chmod 644 $dst_root_home/.ssh/known_hosts
-    # cat /dev/null > $dst_root_home/.ssh/known_hosts
-    chmod 600 $dst_root_home/.ssh/root_id_rsa
-    for i in `ls $dst_root_home/.ssh` ; do ls -l $dst_root_home/.ssh/$i; done
-    cp
-    sed 's/^HISTSIZE=1000/HISTSIZE=100000/' -i /home/devopsadmin/.bashrc
-    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /home/devopsadmin/.bashrc
+    touch /home/$orgusername/.bashrc
+    sed 's/^HISTSIZE=1000/HISTSIZE=100000/' -i /home/$orgusername/.bashrc
+    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /home/$orgusername/.bashrc
     sed 's/^HISTSIZE=1000/HISTSIZE=100000/' -i /root/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /root/.bashrc
     echo -e "\nFunction user_account_setup ends......."
@@ -159,7 +61,6 @@ echo "Function user_account_setup begins......."
 
 
 # Install ssh
-# https://linuxconfig.org/enable-ssh-on-ubuntu-20-04-focal-fossa-linux
 install_ssh () {
     echo "Function install_ssh begins......."
     if [ -f "$ssh_service" ];
@@ -180,20 +81,9 @@ install_ssh () {
 
 
 # Python Setup
-# Manual - Set python environment
-# cd /media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/ansible/ansible-my-works/ubuntu-local-setup
-# pwd
-# python -m venv venv_ubuntu_ansible
-# source /media/devopsadmin/MyData/mohan-ji-HP-8-apr-12/Mohan_Data/RHEL/Linux/Automation/ansible/ansible-my-works/ubuntu-local-setup/venv_ubuntu_ansible/bin/activate
-# pwd
-# pip list
-# pip -V
-# python -m pip install ansible
-# deactivate
-# pip list
-# pip -V
 config_python_alternative () {
     echo "Function config_python_alternative begins......."
+    
     python_default_ver=$(/usr/bin/python --version | awk '{print $2}' | cut -d. -f1)
     python3_ver=$(/usr/bin/python3 --version | awk '{print $2}' | cut -d. -f1-2)
     echo "Print Available python default version: $python_default_ver"
@@ -212,6 +102,7 @@ config_python_alternative () {
        echo "\n\nDisplaying Python version: $(python --version)\n"
        update-alternatives --query python
     fi
+    apt install python3-pip -y
     echo -e "\nFunction config_python_alternative ends......."
     echo -e "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 }
@@ -227,12 +118,9 @@ configure_ansible () {
         ansible -m ping mylearnersepoint
     else
         echo "Ansible is not installed. Installing ansible..."
-#        apt install software-properties-common
-#        add-apt-repository --yes --update ppa:ansible/ansible
-#        apt install ansible
         python -m pip install ansible==2.10
-        ls -ld $src_user_home_data/ansible-config/ansible
-        cp -r $src_user_home_data/ansible-config/ansible /etc/
+        ls -ld ansible-config/ansible
+        cp -r ansible-config/ansible /etc/
         chmod 755 /etc/ansible
         ls -ld /etc/ansible
         sed 's/^#host_key_checking = True/host_key_checking = Flase/' -i /etc/ansible/ansible.cfg
@@ -261,26 +149,15 @@ EOF
 
 
 # # # Calling functions
-# pkg_install
-# add_host
-# create_mydata
-# create_linuxdata
-# user_account_setup
+pkg_install
+user_account_setup
 install_ssh
 config_python_alternative
 configure_ansible
 
 
-# Clear this file
-# cat /dev/null > /root/.ssh/known_hosts
-# cat /dev/null > /home/devopsadmin/.ssh/known_hosts
-
-# add-apt-repository ppa:openshot.developers/ppa -y
-
 echo -e "Ansible role begins.......\n"
-# # #myansible-playbook -l mylearnersepoint /home/devopsadmin/linuxdata/Automation/ansible/ansible-my-works/ubuntu-local-setup/ubuntu_setup.yml -u root --private-key /home/devopsadmin/.ssh/root_id_rsa
-# ansible-playbook -l mylearnersepoint /home/devopsadmin/linuxdata/Automation/ansible/ansible-my-works/ubuntu-local-setup/ubuntu_setup.yml -u root --private-key /home/devopsadmin/.ssh/root_id_rsa
-$ANSIBLE_CMD -l localhost $PLAYBOOK -u root --private-key $key
+$ANSIBLE_CMD -l localhost -e "username=$username" $PLAYBOOK
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
 
 echo -e "\nAnsible role ends......."
@@ -290,6 +167,9 @@ echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 end_time=$(date "+%d.%m.%Y-%H.%M.%S")
 echo -e "Job Finish Time : $end_time \n"
 
-echo -e "Taking final reboot"
+apt update
+apt upgrade -y
 sleep 5
-# reboot
+cd /root
+echo -e "Taking final reboot"
+#reboot

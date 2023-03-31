@@ -1,0 +1,35 @@
+---
+# vars file for home_ubuntu_setup
+
+# Application variables
+list_of_applications:
+  - google-chrome-stable_current_amd64.deb
+  - anydesk_6.2.1-1_amd64.deb
+
+# Package variables
+list_of_packages:
+  - vim
+  - git
+  - curl
+  - net-tools
+  - pip
+  - python3-venv
+  - idle3
+  - snapd
+  - ipcalc
+  - exfat-fuse
+  - exfatprogs
+  - xfce4-terminal
+  - sysstat
+  - plocate
+  - python3-pip
+
+list_of_pip_packages:
+  - jmespath
+
+# visual_studio_code_gpgcheck: yes
+# visual_studio_code_mirror: 'https://packages.microsoft.com'
+# visual_studio_code_version: ''
+# visual_studio_code_package: "{{ (visual_studio_code_build == 'insiders') | ternary('code-insiders', 'code') }}"
+# visual_studio_code_deb_architecture: >-
+#   {{ visual_studio_code_deb_architecture_mapping[ansible_architecture | lower] | default('amd64') }}

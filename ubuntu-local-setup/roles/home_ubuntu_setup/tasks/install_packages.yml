@@ -1,0 +1,77 @@
+---
+- debug:
+    var: list_of_applications
+
+- name: Install application from local .deb packages
+  apt:
+    deb: 'software/{{ item }}'
+  with_items:
+    - '{{ list_of_applications }}'
+  register: list_applications
+  ignore_errors: true
+
+- debug:
+    var: '{{ item }}'
+  with_items:
+    - list_applications.results|map(attribute='item')|list|map(attribute='msg')|list
+
+# Tasks - Install Other packages
+- name: Install various packages from list
+  apt:
+    pkg:
+      - '{{ item }}'
+  with_items: 
+    - '{{ list_of_packages }}'
+  register: install_pkg
+  ignore_errors: true
+
+- debug:
+    var: install_pkg.changed
+
+- name: Update and upgrade apt packages
+  apt:
+    update_cache: yes
+  ignore_errors: yes
+
+
+- name: Install various pip packages from list
+  command: pip install '{{ item }}'
+  with_items: 
+    - jmespath
+  register: list_of_pip_packages
+
+- debug:
+    var: list_of_pip_packages.changed
+
+- name: Update
+  shell: apt update
+
+- name: "Fix Anydesk Configuration"
+  lineinfile:
+    path: /etc/gdm3/custom.conf
+    # The String to Search
+    regexp: "#WaylandEnable=false" 
+    # The String to Replace
+    line: "WaylandEnable=false"
+    state: present
+    backup: yes
+  diff: true
+
+
+# - name: Install VS Code repo (apt)
+#   become: yes
+#   ansible.builtin.apt_repository:
+#     repo: >-
+#       deb [arch={{ visual_studio_code_deb_architecture }}
+#       {{ visual_studio_code_gpgcheck | ternary("", " trusted=yes") }}
+#       signed-by=/etc/apt/keyrings/microsoft.asc]
+#       {{ visual_studio_code_mirror }}/repos/code stable main
+#     filename: vscode
+#     state: present
+#   # when: not visual_studio_code_skip_add_repo
+
+# - name: Install VS Code (apt)
+#   become: yes
+#   ansible.builtin.apt:
+#     name: "{{ visual_studio_code_package }}{{ (visual_studio_code_version | length > 0) | ternary('=' + visual_studio_code_version, '') }}"
+#     state: present
