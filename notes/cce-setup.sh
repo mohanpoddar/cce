@@ -28,3 +28,6 @@ ls $tmp_dir
 bash $tmp_dir/ansible-ubuntu-setup.sh -u $username -o $orgusername
 
 rm -rf $tmp_dir
+
+echo -e "Taking final reboot"
+reboot
