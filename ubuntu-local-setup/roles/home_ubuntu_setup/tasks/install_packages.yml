@@ -67,7 +67,8 @@
 
 - name: Install anydesk
   apt:
-    deb: anydesk
+    name: anydesk
+    state: present
   register: inst_anydesk
 
 - debug:
