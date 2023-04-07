@@ -112,7 +112,7 @@
   shell: apt update
 
 - name: Install chrome
-  shell: apt install /var/tmp/software/google-chrome-stable_current_amd64.deb
+  shell: dpkg --install /var/tmp/software/google-chrome-stable_current_amd64.deb
   register: inst_chrome
 
 - debug:
