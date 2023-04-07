@@ -2,8 +2,8 @@
 # vars file for home_ubuntu_setup
 
 # Application variables
-list_of_applications:
-  - anydesk_6.2.1-1_amd64.deb
+# list_of_applications:
+#   - anydesk_6.2.1-1_amd64.deb
 
 # Package variables
 list_of_packages:

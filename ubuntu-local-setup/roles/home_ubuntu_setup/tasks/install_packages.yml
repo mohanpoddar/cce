@@ -22,24 +22,23 @@
   with_items:
     - list_applications.results|map(attribute='item')|list|map(attribute='msg')|list
 
-# Tasks - Install Other packages
-- name: Install various packages from list
-  apt:
-    pkg:
-      - '{{ item }}'
-  with_items: 
-    - '{{ list_of_packages }}'
-  register: install_pkg
-  ignore_errors: true
+# # Tasks - Install Other packages
+# - name: Install various packages from list
+#   apt:
+#     pkg:
+#       - '{{ item }}'
+#   with_items: 
+#     - '{{ list_of_packages }}'
+#   register: install_pkg
+#   ignore_errors: true
 
-- debug:
-    var: install_pkg.changed
+# - debug:
+#     var: install_pkg.changed
 
 - name: Update and upgrade apt packages
   apt:
     update_cache: yes
   ignore_errors: yes
-
 
 - name: Install various pip packages from list
   command: pip install '{{ item }}'
@@ -52,6 +51,26 @@
 
 - name: Update
   shell: apt update
+
+
+##
+## Install anydesk
+##
+- name: Download anydesk GPG key
+  shell: wget -qO - https://keys.anydesk.com/repos/DEB-GPG-KEY | sudo apt-key add -
+
+- name: Download anydesk GPG key
+  shell: echo "deb http://deb.anydesk.com/ all main" | sudo tee /etc/apt/sources.list.d/anydesk-stable.list
+
+- name: Update packages
+  shell: apt update
+
+- name: Install chrome
+  shell: apt install anydesk
+  register: inst_anydesk
+
+- debug:
+    var: inst_anydesk.stdout_lines
 
 - name: "Fix Anydesk Configuration"
   lineinfile:
