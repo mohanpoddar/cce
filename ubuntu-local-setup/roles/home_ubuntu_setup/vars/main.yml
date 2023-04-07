@@ -3,7 +3,6 @@
 
 # Application variables
 list_of_applications:
-  - google-chrome-stable_current_amd64.deb
   - anydesk_6.2.1-1_amd64.deb
 
 # Package variables

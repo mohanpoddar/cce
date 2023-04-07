@@ -1,4 +1,11 @@
 ---
+
+- name: Create a software directory
+  file:
+    path: /var/tmp/software
+    state: directory
+    mode: '0755'
+
 - debug:
     var: list_of_applications
 
@@ -75,3 +82,19 @@
 #   ansible.builtin.apt:
 #     name: "{{ visual_studio_code_package }}{{ (visual_studio_code_version | length > 0) | ternary('=' + visual_studio_code_version, '') }}"
 #     state: present
+
+##
+## Install chrome
+##
+- name: Download chrome software
+  shell: wget -O /var/tmp/software/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+- name: Update packages
+  shell: apt update
+
+- name: Install chrome
+  shell: apt install /var/tmp/software/google-chrome-stable_current_amd64.deb
+  register: inst_chrome
+
+- debug:
+    var: inst_chrome.stdout_lines
