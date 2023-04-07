@@ -65,8 +65,9 @@
 - name: Update packages
   shell: apt update
 
-- name: Install chrome
-  shell: apt install anydesk
+- name: Install anydesk
+  apt:
+    deb: anydesk
   register: inst_anydesk
 
 - debug:
