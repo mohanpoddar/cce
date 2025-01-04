@@ -4,6 +4,7 @@ PS1=`ps -ef | egrep "rsync -avP /opt/ccpldata/ccplnewdata" | grep -v grep | wc -
 BKP_LOC_SRC='/opt/ccpldata/ccplnewdata'
 #BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_20-12-2024/'
 BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest/'
+RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/cceplrsyncmail.py'
 
 echo "Backup Source Location: $BKP_LOC_SRC"
 echo "Backup Destination Location: $BKP_LOC_DST"
@@ -43,7 +44,7 @@ ccersync () {
 	    echo "Powered Off server at : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
 	    echo "Final Cron Job Completed at : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
 	    echo "TASK ENDS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    python3 /home/cce/rayo/scripts/cceplrsyncmail.py
+	    python3 $RSYNC_EMAIL_FILE
 	    sleep 5
 	    #sudo /usr/sbin/reboot
 	    sudo /usr/sbin/poweroff
