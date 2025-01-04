@@ -30,7 +30,6 @@ MAILTO=""
 ##
 # Daily afternoon backup at 13:30IST
 30 13 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily.sh 2> /home/cce/logs/rsync/cron-rsync.log
-*/5 * * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily.sh 2> /home/cce/logs/rsync/cron-rsync.log
 
 # Daily evening backup at 19:30IST. Once backup is finished server will be powered off. If backup is running then no action.
 30 19 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
