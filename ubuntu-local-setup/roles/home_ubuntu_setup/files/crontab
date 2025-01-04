@@ -22,28 +22,28 @@
 # 
 # m h  dom mon dow   command
 MAILTO=""
+#*/10 * * * * /bin/sh /home/cce/rayo/scripts/monitoronedrive.sh
+
 ##---------------------------------------------##
 ##
 # Rsync - Daily Backup
 ##
 # Daily afternoon backup at 13:30IST
-30 13 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily.sh 2> /home/cce/logs/rsync/cron-rsync.log
+30 13 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily.sh 2> /home/cce/logs/rsync/cron-rsync.log
+*/5 * * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily.sh 2> /home/cce/logs/rsync/cron-rsync.log
 
 # Daily evening backup at 19:30IST. Once backup is finished server will be powered off. If backup is running then no action.
-30 19 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
+30 19 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
 
 # Daily evening backup at 20:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
-30 20 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
+30 20 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
 
 # Daily evening backup at 21:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
-30 21 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
+30 21 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
 
 # Daily evening backup at 22:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
-30 22 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
+30 22 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
 
 # Daily evening backup at 23:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
-02 23 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
-
-# Daily evening backup at 23:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
-30 23 * * * /bin/sh /home/cce/rayo/scripts/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
+30 23 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync.log
 ##---------------------------------------------##
