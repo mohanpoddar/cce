@@ -82,7 +82,7 @@ ccersync () {
             python3 $RSYNC_EMAIL_FILE
             sleep 5
             #sudo /usr/sbin/reboot
-            # sudo /usr/sbin/poweroff
+            sudo /usr/sbin/poweroff
             echo "Never be printed" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
         fi  
 
