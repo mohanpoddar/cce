@@ -56,7 +56,7 @@ error = False
 print ("Retrun Error:", error)
 if latest_log_cron_path.split('_')[-1] != latest_rsync_actual_log_path.split('_')[-1]:
     error = True
-    print ("Erturn Error:", error)
+    print ("Retrun Error:", error)
 
 #def send_email_with_attachment(subject, body, to, attachment_path):
 def send_email(subject, to, cc=None):

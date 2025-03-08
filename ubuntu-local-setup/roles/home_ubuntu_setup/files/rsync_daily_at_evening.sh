@@ -57,11 +57,11 @@ ccersync () {
           starttime=$(date +'%d-%m-%Y-%H%M%S')
 	  echo "TASK STARTS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 	  echo "START rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	  echo "BEFORE - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	  echo "BEFORE - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 
-          rsync -avP $BKP_LOC_SRC $BKP_LOC_DST >> /home/cce/logs/rsync/rsync_in_backup_location_${DC}_$starttime.log 2>&1
+          rsync -avP $BKP_LOC_SRC $BKP_LOC_DST >> /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log 2>&1
 
-	  echo "AFTER - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	  echo "AFTER - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 	  echo "END rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 	  echo "Rysnc is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 	  
