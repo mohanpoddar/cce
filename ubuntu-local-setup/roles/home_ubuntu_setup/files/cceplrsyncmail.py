@@ -11,7 +11,7 @@ print("HOSTNAME:", HOSTNAME)
 
 if HOSTNAME == "av-pc":
     datacenter = "Greater Noida"
-elif HOSTNAME == "503s":
+elif HOSTNAME == "503S":
     datacenter = "Vasundhara"
 elif HOSTNAME == "mylearnersepoint":    
     datacenter = "Ccepladmin Testing Server"
