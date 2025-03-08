@@ -83,7 +83,7 @@ ccersync () {
 	    sleep 5
 	    #sudo /usr/sbin/reboot
 	    # sudo /usr/sbin/poweroff
-		echo "Poweroff command exeection" 
+	    echo "Poweroff command exeection" 
 	  fi  
 
         fi
