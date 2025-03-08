@@ -53,40 +53,40 @@ ccersync () {
 	if [ $PS1 -gt 1 ];
 	then
           echo "Rsync is running."
-        else
-          starttime=$(date +'%d-%m-%Y-%H%M%S')
-	  echo "TASK STARTS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	  echo "START rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	  echo "BEFORE - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+    else
+        starttime=$(date +'%d-%m-%Y-%H%M%S')
+	    echo "TASK STARTS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	    echo "START rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	    echo "BEFORE - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 
-          rsync -avP $BKP_LOC_SRC $BKP_LOC_DST >> /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log 2>&1
+        rsync -avP $BKP_LOC_SRC $BKP_LOC_DST >> /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log 2>&1
 
-	  echo "AFTER - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	  echo "END rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	  echo "Rysnc is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	    echo "AFTER - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	    echo "END rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+	    echo "Rysnc is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
 	  
-	  sleep 5
-
-          echo "Re-verifying if Rsync is running : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-
-          if [ $PS1 -gt 1 ];
-          then
-            echo "Rsync is still running : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-          else
-	    echo "Reverified and confiremd that Rsync is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	    echo "Going to poweroff : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	    echo "Capture Time Before Server Powered Off : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	    echo "Powered Off server at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	    echo "Final Cron Job Completed at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	    echo "TASK ENDS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-	    python3 $RSYNC_EMAIL_FILE
 	    sleep 5
-	    #sudo /usr/sbin/reboot
-	    # sudo /usr/sbin/poweroff
-	    echo "Poweroff command exeection" 
-	  fi  
 
-        fi
+        echo "Re-verifying if Rsync is running : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+
+        if [ $PS1 -gt 1 ];
+        then
+            echo "Rsync is still running : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+        else
+            echo "Reverified and confiremd that Rsync is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+            echo "Going to poweroff : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+            echo "Capture Time Before Server Powered Off : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+            echo "Powered Off server at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+            echo "Final Cron Job Completed at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+            echo "TASK ENDS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+            python3 $RSYNC_EMAIL_FILE
+            sleep 5
+            #sudo /usr/sbin/reboot
+            # sudo /usr/sbin/poweroff
+            echo "Never be printed" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
+        fi  
+
+    fi
 }
 
 ccersync
