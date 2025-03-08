@@ -62,7 +62,7 @@ ccersync () {
           echo "END rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
           echo "Rysnc is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
           echo "TASK ENDS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
-          #python3 $RSYNC_EMAIL_FILE
+          python3 $RSYNC_EMAIL_FILE
     fi
 }
 
