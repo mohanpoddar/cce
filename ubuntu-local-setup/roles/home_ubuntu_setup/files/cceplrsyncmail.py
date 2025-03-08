@@ -32,7 +32,7 @@ def get_latest_rsync_log():
 
 def get_latest_rsync_actual_command_log():
     # Execute the command and capture the output
-    result = subprocess.run("ls -ltrh /home/cce/logs/rsync/rsync_in_backup_location_date_20-12-2024_actual_* | awk '{print $NF}' | tail -n 1", shell=True, capture_output=True, text=True)
+    result = subprocess.run("ls -ltrh /home/cce/logs/rsync/rsync_in_backup_location_latest_* | awk '{print $NF}' | tail -n 1", shell=True, capture_output=True, text=True)
     
     # Check if the command was successful
     if result.returncode == 0:
@@ -53,8 +53,10 @@ if latest_rsync_actual_log_path:
     print("Latest rsync actual log file:", latest_rsync_actual_log_path)
 
 error = False
+print (error)
 if latest_log_cron_path.split('_')[-1] != latest_rsync_actual_log_path.split('_')[-1]:
     error = True
+    print (error)
 
 #def send_email_with_attachment(subject, body, to, attachment_path):
 def send_email(subject, to, cc=None):
