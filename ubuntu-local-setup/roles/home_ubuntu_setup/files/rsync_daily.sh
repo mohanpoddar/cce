@@ -52,7 +52,6 @@ ccersync () {
           echo "Rsync is running."
     else
           starttime=$(date +'%d-%m-%Y-%H%M%S')
-          echo "Hi"
           echo "TASK STARTS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
           echo "START rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
           echo "BEFORE - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_latest_${DC}_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_${DC}_$starttime.log
