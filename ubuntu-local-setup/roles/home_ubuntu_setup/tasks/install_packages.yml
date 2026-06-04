@@ -40,18 +40,23 @@
     update_cache: yes
   ignore_errors: yes
 
-- name: Install various pip packages from list
-  command: pip install '{{ item }}'
-  with_items: 
-    - jmespath
-  register: list_of_pip_packages
+# - name: Install various pip packages from list
+#   command: pip install '{{ item }}'
+#   with_items: 
+#     - jmespath
+#   register: list_of_pip_packages
 
-- debug:
-    var: list_of_pip_packages.changed
+# - debug:
+#     var: list_of_pip_packages.changed
+
+- name: Install jmespath via apt
+  ansible.builtin.apt:
+    name: python3-jmespath
+    state: present
+  become: true
 
 - name: Update
   shell: apt update
-
 
 ##
 ## Install anydesk
