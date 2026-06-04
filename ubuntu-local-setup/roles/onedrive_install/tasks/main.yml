@@ -23,7 +23,7 @@
   become: true
 
 - name: Clear apt cache to drop the bad package reference
-  ansible.builtin.ansible.builtin.command: apt-get clean
+  ansible.builtin.command: apt-get clean
   become: true
 
 - name: Install OneDrive Package from official Ubuntu repositories
