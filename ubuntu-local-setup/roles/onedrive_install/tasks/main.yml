@@ -18,7 +18,7 @@
 
 - name: Install OneDrive Package from official Ubuntu repositories
   ansible.builtin.apt:
-    name: "{{ onedrive_packages }}"
+    name: onedrive
     state: present
     update_cache: yes
   register: inst_onedrive
