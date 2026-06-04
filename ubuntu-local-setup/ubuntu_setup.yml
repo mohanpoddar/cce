@@ -6,7 +6,7 @@
 # Playbook pre tasks
   pre_tasks:
     - name: Display Hostname
-      debug: var=ansible_hostname
+      debug: var=ansible_facts['hostname']
 
 # # Add playbook roles
   roles:
