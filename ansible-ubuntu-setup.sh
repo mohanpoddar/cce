@@ -118,7 +118,8 @@ configure_ansible () {
         ansible -m ping mylearnersepoint
     else
         echo "Ansible is not installed. Installing ansible..."
-        python -m pip install ansible==2.10
+        # python -m pip install ansible==2.10
+		python -m pip install ansible
         ls -ld ansible-config/ansible
         cp -r ansible-config/ansible /etc/
         chmod 755 /etc/ansible
