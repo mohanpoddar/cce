@@ -17,7 +17,7 @@ ansible_config_file=/usr/bin/ansible1
 ansible_inv_file=/etc/ansible/hosts
 
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
-ANSIBLE_CMD=/usr/local/bin/ansible-playbook
+ANSIBLE_CMD=/usr//bin/ansible-playbook
 
 while getopts h:o:u: option
 do 
