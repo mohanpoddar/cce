@@ -13,7 +13,7 @@ ssh_config=/etc/ssh/sshd_config
 
 #Varaible for ansible
 # ansible_config_file=/etc/ansible/ansible.cfg
-ansible_config_file=/usr/bin/ansible
+ansible_config_file=/usr/bin/ansible1
 ansible_inv_file=/etc/ansible/hosts
 
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
