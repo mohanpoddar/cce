@@ -2,13 +2,13 @@
 # tasks file for samba
 
 - name: Include OS-specific Variables.
-  include_vars: "{{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_facts['os_family'] }}.yml"
 
 - name: Inst - Update Repositories Cache
   ansible.builtin.apt:
     update_cache: true
   when:
-    - ansible_os_family == 'Debian'
+    - ansible_facts['os_family'] == 'Debian'
   tags: samba-inst-package
 
 - name: Inst - Samba Packages
@@ -36,10 +36,10 @@
 
 - name: Filter IP Address
   debug:
-    var: ansible_all_ipv4_addresses[0]
+    var: ansible_facts['all_ipv4_addresses'][0]
     
 - name: List Samba share
-  shell: echo {{ item.password }} | smbclient -L {{ ansible_all_ipv4_addresses[0] }} -U {{ item.name }}
+  shell: echo {{ item.password }} | smbclient -L {{ ansible_facts['all_ipv4_addresses'][0] }} -U {{ item.name }}
   with_items: "{{ samba_users }}"
   no_log: true
   register: list_share
