@@ -136,6 +136,7 @@ configure_ansible () {
         then
             echo "Initial host inventory found. Pinging nodes"
             ansible -m ping mylearnersepoint
+            ansible -m ping localhost
         else
         cat << EOF >> $ansible_inv_file
 # Customized Hosts
