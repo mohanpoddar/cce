@@ -1,20 +1,29 @@
 ---
 # tasks file for onedrive_install
 
-- name: Add Release Key
-  shell: wget -qO - https://download.opensuse.org/repositories/home:/npreining:/debian-ubuntu-onedrive/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /usr/share/keyrings/obs-onedrive.gpg > /dev/null
-- name: Add OpenSuSE Repository
-  shell: echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/obs-onedrive.gpg] https://download.opensuse.org/repositories/home:/npreining:/debian-ubuntu-onedrive/xUbuntu_22.04/ ./" | sudo tee /etc/apt/sources.list.d/onedrive.list
+# - name: Add Release Key
+#   shell: wget -qO - https://download.opensuse.org/repositories/home:/npreining:/debian-ubuntu-onedrive/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /usr/share/keyrings/obs-onedrive.gpg > /dev/null
+# - name: Add OpenSuSE Repository
+#   shell: echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/obs-onedrive.gpg] https://download.opensuse.org/repositories/home:/npreining:/debian-ubuntu-onedrive/xUbuntu_22.04/ ./" | sudo tee /etc/apt/sources.list.d/onedrive.list
 
 - name: Update Repository
   shell: apt update
 
-- name: Inst - Onedrive Packages
-  ansible.builtin.package:
+# - name: Inst - Onedrive Packages
+#   ansible.builtin.package:
+#     name: "{{ onedrive_packages }}"
+#     state: "present"
+#   tags: onedrive-inst-package
+#   register: inst_onedrive
+
+- name: Install OneDrive Package from official Ubuntu repositories
+  ansible.builtin.apt:
     name: "{{ onedrive_packages }}"
-    state: "present"
-  tags: onedrive-inst-package
+    state: present
+    update_cache: yes
   register: inst_onedrive
+  tags: onedrive-inst-package
+  become: true
 
 - debug:
     var: inst_onedrive
