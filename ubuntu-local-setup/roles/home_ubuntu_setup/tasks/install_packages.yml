@@ -6,21 +6,21 @@
     state: directory
     mode: '0755'
 
-- debug:
-    var: list_of_applications
+# - debug:
+#     var: list_of_applications
 
-- name: Install application from local .deb packages
-  apt:
-    deb: 'software/{{ item }}'
-  with_items:
-    - '{{ list_of_applications }}'
-  register: list_applications
-  ignore_errors: true
+# - name: Install application from local .deb packages
+#   apt:
+#     deb: 'software/{{ item }}'
+#   with_items:
+#     - '{{ list_of_applications }}'
+#   register: list_applications
+#   ignore_errors: true
 
-- debug:
-    var: '{{ item }}'
-  with_items:
-    - list_applications.results|map(attribute='item')|list|map(attribute='msg')|list
+# - debug:
+#     var: '{{ item }}'
+#   with_items:
+#     - list_applications.results|map(attribute='item')|list|map(attribute='msg')|list
 
 # # Tasks - Install Other packages
 # - name: Install various packages from list
