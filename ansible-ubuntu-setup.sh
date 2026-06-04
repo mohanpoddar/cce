@@ -124,8 +124,8 @@ configure_ansible () {
         add-apt-repository --yes --update ppa:ansible/ansible
         apt install -y ansible
         ls -ld ansible-config/ansible
-        cp -r ansible-config/ansible /etc/
-        chmod 755 /etc/ansible
+        # cp -r ansible-config/ansible /etc/
+        # chmod 755 /etc/ansible
         ls -ld /etc/ansible
         sed 's/^#host_key_checking = True/host_key_checking = Flase/' -i /etc/ansible/ansible.cfg
         ansible --version
