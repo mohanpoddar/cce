@@ -16,6 +16,16 @@
 #   tags: onedrive-inst-package
 #   register: inst_onedrive
 
+- name: Force purge the old broken OneDrive repository list file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/home:npreining:debian-ubuntu-onedrive.list
+    state: absent
+  become: true
+
+- name: Clear apt cache to drop the bad package reference
+  ansible.builtin.ansible.builtin.command: apt-get clean
+  become: true
+
 - name: Install OneDrive Package from official Ubuntu repositories
   ansible.builtin.apt:
     name: onedrive
