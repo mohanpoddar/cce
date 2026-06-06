@@ -37,7 +37,17 @@
 - name: Ensure Samba workgroup is set from role variable
   ansible.builtin.lineinfile:
     path: "{{ samba_configuration }}"
-    regexp: '^\\s*workgroup\\s*=.*'
+    # remove any line setting the workgroup (handles common misspelling 'workgrpup')
+    regexp: '^\\s*#?\\s*(workgroup|workgrpup)\\s*=.*'
+    state: absent
+    backup: yes
+  tags:
+    - samba-conf
+
+- name: Insert Samba workgroup under [global]
+  ansible.builtin.lineinfile:
+    path: "{{ samba_configuration }}"
+    insertafter: '^\\[global\\]'
     line: '   workgroup = {{ samba_workgroup }}'
     backup: yes
   notify:
