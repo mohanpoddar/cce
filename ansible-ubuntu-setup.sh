@@ -84,26 +84,33 @@ install_ssh () {
 # Python Setup
 config_python_alternative () {
     echo "Function config_python_alternative begins......."
-    
-    python_default_ver=$(/usr/bin/python3 --version | awk '{print $2}' | cut -d. -f1)
-    python3_ver=$(/usr/bin/python3 --version | awk '{print $2}' | cut -d. -f1-2)
-    echo "Print Available python default version: $python_default_ver"
-    echo "Print Available python3 version: $python3_ver"
 
-    if [ "$python_default_ver" = "3" ];
-    then
-       echo  "/usr/bin/python points to python3"
-       echo "Displaying Python version: $(python --version)\n"
-       update-alternatives --query python
-    else
-       echo "/usr/bin/python does not point to python3. Setting up..."
-       update-alternatives --install /usr/bin/python python /usr/bin/python$python3_ver 30
-       update-alternatives  --set python /usr/bin/python$python3_ver
-       echo 0 | update-alternatives --config python
-       echo "\n\nDisplaying Python version: $(python --version)\n"
-       update-alternatives --query python
+    # Ensure python3 is available
+    py3=$(command -v python3 || true)
+    if [ -z "$py3" ]; then
+        echo "python3 not found; installing python3..."
+        apt-get update
+        apt-get install -y python3
+        py3=$(command -v python3 || true)
+        if [ -z "$py3" ]; then
+            echo "Failed to install python3. Exiting function."
+            return 1
+        fi
     fi
-    apt install python3-pip -y
+
+    # If an alternatives group for 'python' exists, show it; otherwise register python3
+    if update-alternatives --query python >/dev/null 2>&1; then
+        echo "update-alternatives 'python' group exists. Current python: $(command -v python || echo 'none')"
+        update-alternatives --query python || true
+    else
+        echo "No alternatives for 'python' found. Registering $py3 as the python alternative."
+        update-alternatives --install /usr/bin/python python "$py3" 10
+        update-alternatives --set python "$py3" >/dev/null 2>&1 || true
+        echo "Registered /usr/bin/python -> $(python --version 2>/dev/null || echo 'unknown')"
+    fi
+
+    apt-get install -y python3-pip
+
     echo -e "\nFunction config_python_alternative ends......."
     echo -e "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 }
