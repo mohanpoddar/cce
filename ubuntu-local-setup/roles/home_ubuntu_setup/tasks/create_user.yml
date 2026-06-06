@@ -20,3 +20,39 @@
 #     content: 'devopsadmin ALL=(ALL) NOPASSWD:ALL'
 #     dest: /etc/sudoers.d/devopsadmin_sudo
 #     mode: 0440
+
+# Create recursive directory for user cce
+- name: Create recursive directory for user cce
+  ansible.builtin.file:
+    path: /home/cce/rayo/scripts/github
+    state: directory
+    owner: cce
+    group: cce
+    recursive: yes
+    mode: 0755
+
+# Copy file from $tmp_dir to /home/cce/rayo/scripts/github/
+- name: Copy file rsync_daily.sh from tmp_dir to /home/cce/rayo/scripts/github/
+  ansible.builtin.copy:
+    src: "{{ tmp_dir }}/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily.sh"
+    dest: /home/cce/rayo/scripts/github/rsync_daily.sh
+    owner: cce
+    group: cce
+    mode: 0655
+
+- name: Copy file rsync_daily_at_evening.sh from tmp_dir to /home/cce/rayo/scripts/github/
+  ansible.builtin.copy:
+    src: "{{ tmp_dir }}/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh"
+    dest: /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh
+    owner: cce
+    group: cce
+    mode: 0655
+
+# Copy monitoronedrive.sh to /home/cce/rayo/scripts/github/monitoronedrive.sh
+- name: Copy file monitoronedrive.sh from tmp_dir to /home/cce/rayo/scripts/github/
+  ansible.builtin.copy:
+    src: "{{ tmp_dir }}/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/monitoronedrive.sh"
+    dest: /home/cce/rayo/scripts/github/monitoronedrive.sh
+    owner: cce
+    group: cce
+    mode: 0655

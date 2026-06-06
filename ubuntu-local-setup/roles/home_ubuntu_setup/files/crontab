@@ -22,7 +22,7 @@
 # 
 # m h  dom mon dow   command
 MAILTO=""
-#*/10 * * * * /bin/sh /home/cce/rayo/scripts/monitoronedrive.sh
+#*/10 * * * * /bin/sh /home/cce/rayo/scripts/github/monitoronedrive.sh
 
 ##---------------------------------------------##
 ##
