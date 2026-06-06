@@ -11,6 +11,12 @@
     - ansible_facts['os_family'] == 'Debian'
   tags: samba-inst-package
 
+- name: Verify directory for samba share mount point /opt/ccpldata exists. If not, create it.
+  ansible.builtin.file:
+    path: /opt/ccpldata
+    state: directory
+  tags: samba-inst-package
+
 - name: Inst - Samba Packages
   ansible.builtin.package:
     name: "{{ samba_packages }}"
