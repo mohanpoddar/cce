@@ -9,6 +9,7 @@
     - create_user.yml
     - install_packages.yml
     - fix_grub.yml
+    - setup_cron.yml
   loop_control:
     loop_var: playbook
 
