@@ -29,7 +29,22 @@ do
     esac
 done
 
+backup_conflicting_ppas () {
+    echo "Checking for known conflicting PPA source files..."
+    mkdir -p /root/backup-apt-sources
+    for f in /etc/apt/sources.list.d/*danielrichter2007*; do
+        if [ -f "$f" ]; then
+            current_time=$(date "+%d.%m.%Y-%H.%M.%S")
+            dest="/root/backup-apt-sources/$(basename "$f").$current_time"
+            echo "Backing up $f -> $dest"
+            mv "$f" "$dest"
+        fi
+    done
+}
+
 apt upgrade -y
+# backup any conflicting PPA source files before updating package cache
+backup_conflicting_ppas
 apt-get update
 
 # Install basic initial packages
