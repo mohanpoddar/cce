@@ -1,17 +1,50 @@
 ---
-- name: Add grub customizer
-  ansible.builtin.apt_repository:
-    repo: ppa:danielrichter2007/grub-customizer
-    state: present
-  become: true
+- block:
+    - name: Find existing grub-customizer PPA files
+      ansible.builtin.find:
+        paths: /etc/apt/sources.list.d
+        patterns: '*danielrichter2007*'
+        file_type: file
+      register: grub_ppa_files
+      become: true
 
-- name: Update grub
+    - name: Ensure backup directory exists for apt sources
+      ansible.builtin.file:
+        path: /root/backup-apt-sources
+        state: directory
+        mode: '0755'
+      become: true
+
+    - name: Backup existing grub-customizer PPA files
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "/root/backup-apt-sources/{{ item.path | basename }}.{{ ansible_facts['date_time'].date }}-{{ ansible_facts['date_time'].time }}"
+        remote_src: yes
+      loop: "{{ grub_ppa_files.files }}"
+      when: grub_ppa_files.matched > 0
+      become: true
+
+    - name: Remove existing grub-customizer PPA files (if any)
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ grub_ppa_files.files }}"
+      when: grub_ppa_files.matched > 0
+      become: true
+
+    - name: Add grub customizer PPA
+      ansible.builtin.apt_repository:
+        repo: ppa:danielrichter2007/grub-customizer
+        state: present
+      become: true
+
+- name: Update apt cache
   ansible.builtin.apt:
     update_cache: yes
     cache_valid_time: 3600
   become: true
 
-- name: Install grub-customizer
+- name: Install grub-customizer (optional)
   ansible.builtin.apt:
     name: grub-customizer
     state: present

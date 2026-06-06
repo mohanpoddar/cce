@@ -1,2 +1,5 @@
 ---
 # defaults file for home_ubuntu_setup
+
+# Do not install grub-customizer by default on servers
+install_grub_customizer: false
