@@ -1,0 +1,53 @@
+{% if first_samba_shares|length > 0 %}
+## The below configuration is about CCE data sharing
+## CCE Shared directories
+{% for share in first_samba_shares %}
+[{{ share.sharename }}]
+{% if share.comment is defined %}
+  comment = {{ share.comment }}
+{% endif %}
+  path = {{ share.path|default([samba_shares_root,share.shardirname]|join('/')) }}
+{% if share.browseable is defined %}
+  browseable = {{ share.browseable }}
+{% endif %}
+{% if share.read_only is defined %}
+  read only = {{ share.read_only|default('no') }}
+{% endif %}
+{% if share.writable is defined %}
+  writable = {{ share.writable }}
+{% endif %}
+{% if share.guest_ok is defined %}
+  guest ok = {{ share.guest_ok|default('no') }}
+{% endif %}
+{% if share.valid_users is defined %}
+  valid users = {{ share.valid_users }}
+{% endif %}
+
+{% endfor %}
+{% endif%}
+
+{% if second_samba_shares|length > 0 %}
+{% for share in second_samba_shares %}
+[{{ share.sharename }}]
+{% if share.comment is defined %}
+  comment = {{ share.comment }}
+{% endif %}
+  path = {{ share.path|default([samba_shares_root,share.shardirname]|join('/')) }}
+{% if share.browseable is defined %}
+  browseable = {{ share.browseable }}
+{% endif %}
+{% if share.read_only is defined %}
+  read only = {{ share.read_only|default('no') }}
+{% endif %}
+{% if share.writable is defined %}
+  writable = {{ share.writable }}
+{% endif %}
+{% if share.guest_ok is defined %}
+  guest ok = {{ share.guest_ok|default('no') }}
+{% endif %}
+{% if share.valid_users is defined %}
+  valid users = {{ share.valid_users }}
+{% endif %}
+
+{% endfor %}
+{% endif%}

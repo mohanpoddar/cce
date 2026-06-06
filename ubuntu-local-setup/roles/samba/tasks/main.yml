@@ -17,15 +17,37 @@
     state: "present"
   tags: samba-inst-package
 
-- name: Conf - Samba
-  ansible.builtin.template:
-    dest: "{{ samba_configuration }}"
-    src: smb.conf.j2
-    validate: 'testparm -s %s'
+# Backup samba configuration file
+- name: Backup samba configuration file
+  ansible.builtin.copy:
+    src: "{{ samba_configuration }}"
+    dest: "{{ samba_configuration }}.bak"
+    remote_src: true
+  when: ansible_facts['os_family'] == 'Debian'
+  tags:
+    - samba-conf
+
+# Configure Samba and add template file ubuntu-local-setup/roles/samba/templates/smb_share.j2 at the end of the configuration file
+- name: Add Samba share configuration
+  ansible.builtin.blockinfile:
+    path: "{{ samba_configuration }}"
+    block: |
+      {% include 'smb_share.j2' %}
+    append: true
   notify:
     - Restart Samba
   tags:
     - samba-conf
+
+# - name: Conf - Samba
+#   ansible.builtin.template:
+#     dest: "{{ samba_configuration }}"
+#     src: smb.conf.j2
+#     validate: 'testparm -s %s'
+#   notify:
+#     - Restart Samba
+#   tags:
+#     - samba-conf
 
 - name: Create Samba user password
   shell: (echo {{ item.password }}; echo {{ item.password }}) | smbpasswd -s -a {{ item.name }}

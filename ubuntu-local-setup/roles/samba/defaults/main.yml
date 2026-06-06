@@ -1,9 +1,8 @@
 ---
 # defaults file for samba
 
-samba_workgroup: "WORKGROUP"
+samba_workgroup: "WORKGROUP_CCEPL_DATASHARE"
 samba_log_size: 5000
-
 
 # samba_shares: []
 samba_shares_root: "/opt/cce/ccedata"
