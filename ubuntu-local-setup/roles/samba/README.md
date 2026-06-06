@@ -39,6 +39,15 @@ Notes:
 - The template uses `samba_shares_root` and `shardirname` to construct default `path` values.
 - Use `ansible-playbook -t samba-conf --check` to dry-run changes for this role.
 
+Group vars recommendation:
+- Put `datacenter_map` in `group_vars/all.yml` to share mappings across roles and avoid duplication. Example:
+
+```
+datacenter_map:
+  AV-PC: "GreaterNoida"
+  WEB-01: "Mumbai-DC"
+```
+
 Dependencies
 ------------
 
