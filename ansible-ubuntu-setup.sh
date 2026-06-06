@@ -200,5 +200,5 @@ apt update
 apt upgrade -y
 sleep 5
 cd /root
-echo -e "Taking final reboot"
+# echo -e "Taking final reboot"
 #reboot
