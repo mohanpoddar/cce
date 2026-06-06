@@ -30,14 +30,14 @@
 {% endif %}
 {% if share.vfs_audit is defined and share.vfs_audit %}
   # VFS Audit Configuration
-  vfs objects = full_audit
-  full_audit:prefix = %u|%I|%S
+  ## vfs objects = full_audit
+  ## full_audit:prefix = %u|%I|%S
   # Track the 4 essential actions + openat (needed for the system to see the file)
   # Track common file operations (use SMB-level actions supported by vfs_full_audit)
-  full_audit:success = open close write rename unlink mkdir rmdir
-  full_audit:failure = none
-  full_audit:facility = local5
-  full_audit:priority = notice
+  ## full_audit:success = open close write rename unlink mkdir rmdir
+  ## full_audit:failure = none
+  ## full_audit:facility = local5
+  ## full_audit:priority = notice
 {% endif %}
 
 {% endfor %}
