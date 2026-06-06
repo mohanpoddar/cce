@@ -85,7 +85,7 @@ install_ssh () {
 config_python_alternative () {
     echo "Function config_python_alternative begins......."
     
-    python_default_ver=$(/usr/bin/python --version | awk '{print $2}' | cut -d. -f1)
+    python_default_ver=$(/usr/bin/python3 --version | awk '{print $2}' | cut -d. -f1)
     python3_ver=$(/usr/bin/python3 --version | awk '{print $2}' | cut -d. -f1-2)
     echo "Print Available python default version: $python_default_ver"
     echo "Print Available python3 version: $python3_ver"
