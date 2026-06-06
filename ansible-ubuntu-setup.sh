@@ -162,10 +162,10 @@ EOF
 
 
 # # # Calling functions
-pkg_install
-user_account_setup
-install_ssh
-config_python_alternative
+# pkg_install
+# user_account_setup
+# install_ssh
+# config_python_alternative
 configure_ansible
 
 
