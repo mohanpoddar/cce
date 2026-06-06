@@ -20,7 +20,7 @@ first_samba_shares:
 second_samba_shares:
   - sharename: second_cce_share_name
     shardirname: CCEPL_SERVER_SECOND
-    comment: "cce second data share"
+    comment: "CCEPL data share"
     browseable: "yes"
     read_only: "no"
     writable: "yes"

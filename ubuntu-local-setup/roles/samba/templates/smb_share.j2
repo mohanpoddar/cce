@@ -7,7 +7,9 @@
 ## CCE Shared directories
 {% for share in first_samba_shares %}
 [{{ share.sharename | default('CCEPL_SERVER_' ~ host ~ '_' ~ datacenter) }}]
-{% if share.comment is defined %}
+{% if share.shardirname is defined %}
+  comment = CCEPL data share for {{ share.shardirname }}
+{% elif share.comment is defined %}
   comment = {{ share.comment }}
 {% endif %}
   path = {{ share.path|default([samba_shares_root,share.shardirname]|join('/')) }}
@@ -44,7 +46,9 @@
 {% if (second_samba_shares|default([]))|length > 0 %}
 {% for share in second_samba_shares %}
 # [{{ share.sharename | default('CCEPL_SERVER_' ~ host ~ '_' ~ datacenter) }}]
-{% if share.comment is defined %}
+{% if share.shardirname is defined %}
+#   comment = CCEPL data share for {{ share.shardirname }}
+{% elif share.comment is defined %}
 #   comment = {{ share.comment }}
 {% endif %}
 #   path = {{ share.path|default([samba_shares_root,share.shardirname]|join('/')) }}
