@@ -1,7 +1,7 @@
 ---
 - name: "Set target crontab user (default: cce)"
   set_fact:
-    target_cron_user: "{{ username | default('cce') }}"
+    target_cron_user: "{{ orgusername | default('cce') }}"
 
 - name: Read existing crontab for target user
   ansible.builtin.shell:
