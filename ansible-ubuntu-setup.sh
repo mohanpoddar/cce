@@ -148,6 +148,7 @@ configure_ansible () {
         cat << EOF >> $ansible_inv_file
 # Customized Hosts
 [ubuntuservers]
+localhost ansible_connection=local
 
 EOF
        grep -A3 ubuntuservers /etc/ansible/hosts
