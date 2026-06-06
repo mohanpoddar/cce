@@ -16,6 +16,7 @@ first_samba_shares:
     valid_users: cce
     group: cce
     shardirname: first_cce_share_dir
+    vfs_audit: true
 
 second_samba_shares:
   - sharename: second_cce_share_name

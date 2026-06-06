@@ -13,6 +13,32 @@ Role Variables
 
 A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
 
+Customizations for this repo
+---------------------------
+
+- `vfs_audit` (boolean): when set to `true` for a share in `first_samba_shares`, the template will include a VFS `full_audit` configuration block for that share.
+- `second_samba_shares`: entries are rendered as commented blocks in the generated config so they remain available but inactive. Remove the leading `# ` to enable and adjust values as needed.
+
+Example (defaults/main.yml):
+
+```
+first_samba_shares:
+  - sharename: CCEPL_SERVER
+    comment: "CCEPL Server DATA Share"
+    shardirname: CCEPL_SERVER
+    browseable: "yes"
+    read_only: "no"
+    writable: "yes"
+    guest_ok: "no"
+    valid_users: cce
+    vfs_audit: true
+```
+
+Notes:
+- The role writes timestamped backups of the Samba config before modifying it.
+- The template uses `samba_shares_root` and `shardirname` to construct default `path` values.
+- Use `ansible-playbook -t samba-conf --check` to dry-run changes for this role.
+
 Dependencies
 ------------
 

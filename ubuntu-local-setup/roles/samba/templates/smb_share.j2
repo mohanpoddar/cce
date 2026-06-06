@@ -22,31 +22,42 @@
 {% if share.valid_users is defined %}
   valid users = {{ share.valid_users }}
 {% endif %}
+{% if share.vfs_audit is defined and share.vfs_audit %}
+  # VFS Audit Configuration
+  vfs objects = full_audit
+  full_audit:prefix = %u|%I|%S
+  # Track the 4 essential actions + openat (needed for the system to see the file)
+  full_audit:success = mkdirat renameat unlinkat rmdir pwrite_send openat close
+  #full_audit:success = close unlinkat renameat pwrite mkdirat
+  full_audit:failure = none
+  full_audit:facility = local5
+  full_audit:priority = notice
+{% endif %}
 
 {% endfor %}
 {% endif%}
 
 {% if (second_samba_shares|default([]))|length > 0 %}
 {% for share in second_samba_shares %}
-[{{ share.sharename }}]
+# [{{ share.sharename }}]
 {% if share.comment is defined %}
-  comment = {{ share.comment }}
+#   comment = {{ share.comment }}
 {% endif %}
-  path = {{ share.path|default([samba_shares_root,share.shardirname]|join('/')) }}
+#   path = {{ share.path|default([samba_shares_root,share.shardirname]|join('/')) }}
 {% if share.browseable is defined %}
-  browseable = {{ share.browseable }}
+#   browseable = {{ share.browseable }}
 {% endif %}
 {% if share.read_only is defined %}
-  read only = {{ share.read_only|default('no') }}
+#   read only = {{ share.read_only|default('no') }}
 {% endif %}
 {% if share.writable is defined %}
-  writable = {{ share.writable }}
+#   writable = {{ share.writable }}
 {% endif %}
 {% if share.guest_ok is defined %}
-  guest ok = {{ share.guest_ok|default('no') }}
+#   guest ok = {{ share.guest_ok|default('no') }}
 {% endif %}
 {% if share.valid_users is defined %}
-  valid users = {{ share.valid_users }}
+#   valid users = {{ share.valid_users }}
 {% endif %}
 
 {% endfor %}
