@@ -196,9 +196,9 @@ echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 end_time=$(date "+%d.%m.%Y-%H.%M.%S")
 echo -e "Job Finish Time : $end_time \n"
 
-# apt update
-# apt upgrade -y
-# sleep 5
-# cd /root
-# echo -e "Taking final reboot"
+apt update
+apt upgrade -y
+sleep 5
+cd /root
+echo -e "Taking final reboot"
 #reboot
