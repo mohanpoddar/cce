@@ -45,6 +45,7 @@ backup_conflicting_ppas () {
 apt upgrade -y
 # backup any conflicting PPA source files before updating package cache
 backup_conflicting_ppas
+
 apt-get update
 
 # Install basic initial packages
@@ -177,10 +178,10 @@ EOF
 
 
 # # # Calling functions
-# pkg_install
-# user_account_setup
-# install_ssh
-# config_python_alternative
+pkg_install
+user_account_setup
+install_ssh
+config_python_alternative
 configure_ansible
 
 
