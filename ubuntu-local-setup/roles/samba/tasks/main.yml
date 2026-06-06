@@ -35,20 +35,20 @@
 
 # Configure Samba: set workgroup in the existing smb.conf and append share blocks
 - name: Ensure Samba workgroup is set from role variable
-  ansible.builtin.lineinfile:
+  ansible.builtin.replace:
     path: "{{ samba_configuration }}"
-    # remove any line setting the workgroup (handles common misspelling 'workgrpup')
-    regexp: '^\\s*#?\\s*(workgroup|workgrpup)\\s*=.*'
-    state: absent
+    regexp: '(?i)^[ \t]*#?[ \t]*(workgroup|workgrpup)[ \t]*=.*$'
+    replace: '   workgroup = {{ samba_workgroup }}'
     backup: yes
   tags:
     - samba-conf
 
-- name: Insert Samba workgroup under [global]
+- name: Ensure single Samba workgroup line exists under [global]
   ansible.builtin.lineinfile:
     path: "{{ samba_configuration }}"
     insertafter: '^\\[global\\]'
     line: '   workgroup = {{ samba_workgroup }}'
+    regexp: '^\\s*workgroup\\s*=.*'
     backup: yes
   notify:
     - Restart Samba
