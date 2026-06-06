@@ -21,7 +21,7 @@
 - name: Backup samba configuration file (timestamped)
   ansible.builtin.copy:
     src: "{{ samba_configuration }}"
-    dest: "{{ samba_configuration }}.{{ ansible_date_time.date }}-{{ ansible_date_time.time }}"
+    dest: "{{ samba_configuration }}.{{ ansible_facts['date_time'].date }}-{{ ansible_facts['date_time'].time }}"
     remote_src: true
   when: ansible_facts['os_family'] == 'Debian'
   tags:
@@ -31,8 +31,7 @@
 - name: Add Samba share configuration
   ansible.builtin.blockinfile:
     path: "{{ samba_configuration }}"
-    block: |
-      {% include 'smb_share.j2' %}
+    block: "{{ lookup('template', 'smb_share.j2') }}"
     append: true
   notify:
     - Restart Samba
