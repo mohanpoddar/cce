@@ -33,7 +33,18 @@
   tags:
     - samba-conf
 
-# Configure Samba and add template file ubuntu-local-setup/roles/samba/templates/smb_share.j2 at the end of the configuration file
+# Configure Samba: set workgroup in the existing smb.conf and append share blocks
+- name: Ensure Samba workgroup is set from role variable
+  ansible.builtin.lineinfile:
+    path: "{{ samba_configuration }}"
+    regexp: '^\\s*workgroup\\s*=.*'
+    line: '   workgroup = {{ samba_workgroup }}'
+    backup: yes
+  notify:
+    - Restart Samba
+  tags:
+    - samba-conf
+
 - name: Add Samba share configuration
   ansible.builtin.blockinfile:
     path: "{{ samba_configuration }}"
@@ -41,6 +52,15 @@
     insertafter: EOF
   notify:
     - Restart Samba
+  tags:
+    - samba-conf
+
+- name: Validate Samba configuration with testparm
+  ansible.builtin.command:
+    cmd: testparm -s {{ samba_configuration }}
+  register: testparm_result
+  changed_when: false
+  failed_when: testparm_result.rc != 0
   tags:
     - samba-conf
 
