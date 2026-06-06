@@ -13,7 +13,7 @@ ssh_config=/etc/ssh/sshd_config
 
 #Varaible for ansible
 # ansible_config_file=/etc/ansible/ansible.cfg
-ansible_config_file=/usr/bin/ansible1
+ansible_config_file=/usr/bin/ansible
 ansible_inv_file=/etc/ansible/hosts
 
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
@@ -51,9 +51,9 @@ pkg_install () {
 user_account_setup () {
 echo "Function user_account_setup begins......."
     touch /home/$orgusername/.bashrc
-    sed 's/^HISTSIZE=1000/HISTSIZE=100000/' -i /home/$orgusername/.bashrc
+    sed 's/^HISTSIZE=1000/HISTSIZE=100000000/' -i /home/$orgusername/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /home/$orgusername/.bashrc
-    sed 's/^HISTSIZE=1000/HISTSIZE=100000/' -i /root/.bashrc
+    sed 's/^HISTSIZE=1000/HISTSIZE=100000000/' -i /root/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /root/.bashrc
     echo -e "\nFunction user_account_setup ends......."
     echo -e "\n++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
