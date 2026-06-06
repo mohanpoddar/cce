@@ -1,37 +1,48 @@
 ---
-# Tasks - Copy keys for user - root
-# Tasks - Copy root private key to user devopsadmin home for ansible playbook run by devopsadmin with root previledge
-# - name: Copy resolv.conf
-#   copy:
-#     src: resolv.conf
-#     dest: /root/resolv.conf
-#     owner: root
-#     group: root
-#     mode: '0755'
+- name: Set target crontab user (default: cce)
+  set_fact:
+    target_cron_user: "{{ username | default('cce') }}"
 
-#*/1 * * * * /bin/cp /root/resolv.conf /etc/resolv.conf
-# Field    Description    Allowed Value
-# MIN      Minute field    0 to 59
-# HOUR     Hour field      0 to 23
-# DOM      Day of Month    1-31
-# MON      Month field     1-12
-# DOW      Day Of Week     0-6
-# CMD      Command         Any command to be executed.
+- name: Read existing crontab for target user
+  ansible.builtin.shell:
+    cmd: "crontab -l -u {{ target_cron_user }}"
+  register: existing_cron
+  failed_when: false
+  changed_when: false
 
-# - name: Creates resolv.conf cron file under /etc/cron.d
-#   ansible.builtin.cron:
-#     name: Setup resolv.conf    
-#     minute: "*/1"
-#     hour: "*"
-#     day: "*"
-#     month: "*"
-#     weekday: "*"
-#     user: root
-#     job: "/bin/cp /root/resolv.conf /etc/resolv.conf"
-#     cron_file: resolv_config
+- name: Write existing crontab to temporary file
+  ansible.builtin.copy:
+    content: "{{ existing_cron.stdout | default('') }}\n"
+    dest: "/tmp/{{ target_cron_user }}.crontab.current"
+    mode: '0600'
 
-# - name: sudo without password for devopsadmin user
-#   copy:
-#     content: 'devopsadmin ALL=(ALL) NOPASSWD:ALL'
-#     dest: /etc/sudoers.d/devopsadmin_sudo
-#     mode: 0440
+- name: Copy new crontab template to temporary file
+  ansible.builtin.copy:
+    src: crontab
+    dest: "/tmp/{{ target_cron_user }}.crontab"
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: Install crontab for user if different
+  ansible.builtin.shell: |
+    set -o pipefail
+    if ! diff -q /tmp/{{ target_cron_user }}.crontab /tmp/{{ target_cron_user }}.crontab.current >/dev/null 2>&1; then
+      crontab -u {{ target_cron_user }} /tmp/{{ target_cron_user }}.crontab
+      echo CHANGED
+    else
+      echo NOCHANGE
+    fi
+  args:
+    executable: /bin/bash
+  register: crontab_result
+  changed_when: "'CHANGED' in crontab_result.stdout"
+
+- name: Remove temporary crontab files
+  ansible.builtin.file:
+    path: "/tmp/{{ item }}"
+    state: absent
+  loop:
+    - "{{ target_cron_user }}.crontab"
+    - "{{ target_cron_user }}.crontab.current"
+  when: crontab_result is defined

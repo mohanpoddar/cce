@@ -14,3 +14,9 @@
 
 - debug:
     var: create_user
+
+# - name: sudo without password for devopsadmin user
+#   copy:
+#     content: 'devopsadmin ALL=(ALL) NOPASSWD:ALL'
+#     dest: /etc/sudoers.d/devopsadmin_sudo
+#     mode: 0440
