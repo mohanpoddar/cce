@@ -32,7 +32,7 @@
   ansible.builtin.blockinfile:
     path: "{{ samba_configuration }}"
     block: "{{ lookup('template', 'smb_share.j2') }}"
-    append: true
+    insertafter: EOF
   notify:
     - Restart Samba
   tags:

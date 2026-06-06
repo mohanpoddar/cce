@@ -10,6 +10,6 @@
 
 # # Add playbook roles
   roles:
-  - role: home_ubuntu_setup
-  - onedrive_install
+  # - home_ubuntu_setup
+  # - onedrive_install
   - samba
