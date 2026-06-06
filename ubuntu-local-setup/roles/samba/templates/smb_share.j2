@@ -1,4 +1,4 @@
-{% if first_samba_shares|length > 0 %}
+{% if (first_samba_shares|default([]))|length > 0 %}
 ## The below configuration is about CCE data sharing
 ## CCE Shared directories
 {% for share in first_samba_shares %}
@@ -26,7 +26,7 @@
 {% endfor %}
 {% endif%}
 
-{% if second_samba_shares|length > 0 %}
+{% if (second_samba_shares|default([]))|length > 0 %}
 {% for share in second_samba_shares %}
 [{{ share.sharename }}]
 {% if share.comment is defined %}

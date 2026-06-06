@@ -17,11 +17,11 @@
     state: "present"
   tags: samba-inst-package
 
-# Backup samba configuration file
-- name: Backup samba configuration file
+# Backup samba configuration file (timestamped)
+- name: Backup samba configuration file (timestamped)
   ansible.builtin.copy:
     src: "{{ samba_configuration }}"
-    dest: "{{ samba_configuration }}.bak"
+    dest: "{{ samba_configuration }}.{{ ansible_date_time.date }}-{{ ansible_date_time.time }}"
     remote_src: true
   when: ansible_facts['os_family'] == 'Debian'
   tags:
