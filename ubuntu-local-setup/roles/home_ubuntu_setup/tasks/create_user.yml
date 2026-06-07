@@ -13,40 +13,48 @@
   # when: username is defined
 
 - debug:
-    var: create_user
+    msg: "script_dest_dir={{ script_dest_dir | default('UNDEFINED') }} script_source_dir={{ script_source_dir | default('UNDEFINED') }}"
+
+- name: Assert required group variables are defined
+  ansible.builtin.assert:
+    that:
+      - script_source_dir is defined
+      - script_dest_dir is defined
+    fail_msg: "Required variables script_source_dir or script_dest_dir are missing in group_vars/all.yml"
+    success_msg: "script_source_dir and script_dest_dir are present"
 
 # - name: sudo without password for devopsadmin user
-#   copy:
-#     content: 'devopsadmin ALL=(ALL) NOPASSWD:ALL'
-#     dest: /etc/sudoers.d/devopsadmin_sudo
+- name: Create recursive directory for user cce
+  ansible.builtin.file:
+    path: "{{ script_dest_dir }}"
 #     mode: 0440
 
 - debug:
     var: script_dest_dir
 
 # Create recursive directory for user cce
-- name: Create recursive directory for user cce
-  ansible.builtin.file:
-    path: "{{ script_dest_dir }}"
-    state: directory
-    owner: cce
-    group: cce
-    recurse: yes
-    mode: 0755
-
-# Copy file from $tmp_dir to /home/cce/rayo/scripts/github/
+# - name: Create recursive directory for user cce
 - name: Copy file rsync_daily.sh from tmp_dir to {{ script_dest_dir }}/rsync_daily.sh
   ansible.builtin.copy:
     src: "{{ script_source_dir }}/rsync_daily.sh"
     dest: "{{ script_dest_dir }}/rsync_daily.sh"
-    owner: cce
     group: cce
-    mode: 0655
+    recurse: yes
+    mode: 0755
 
 - name: Copy file rsync_daily_at_evening.sh from tmp_dir to {{ script_dest_dir }}/rsync_daily_at_evening.sh
   ansible.builtin.copy:
     src: "{{ script_source_dir }}/rsync_daily_at_evening.sh"
     dest: "{{ script_dest_dir }}/rsync_daily_at_evening.sh"
+    dest: "{{ script_dest_dir }}/rsync_daily.sh"
+    owner: cce
+    group: cce
+    mode: 0655
+
+- name: Copy file monitoronedrive.sh from tmp_dir to {{ script_dest_dir }}/monitoronedrive.sh
+  ansible.builtin.copy:
+    src: "{{ script_source_dir }}/monitoronedrive.sh"
+    dest: "{{ script_dest_dir }}/monitoronedrive.sh"
     owner: cce
     group: cce
     mode: 0655
