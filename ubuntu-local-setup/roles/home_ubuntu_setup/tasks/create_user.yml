@@ -56,3 +56,12 @@
     owner: cce
     group: cce
     mode: 0655
+
+# Copy cceplrsyncmail.py to {{ script_dest_dir }}/cceplrsyncmail.py
+- name: Copy file cceplrsyncmail.py to {{ script_dest_dir }}/cceplrsyncmail.py
+  ansible.builtin.copy:
+    src: "{{ script_source_dir }}/cceplrsyncmail.py"
+    dest: "{{ script_dest_dir }}/cceplrsyncmail.py"
+    owner: cce
+    group: cce
+    mode: 0655
