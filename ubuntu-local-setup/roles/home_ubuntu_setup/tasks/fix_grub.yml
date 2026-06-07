@@ -32,9 +32,14 @@
       when: grub_ppa_files.matched > 0
       become: true
 
-    - name: Add grub customizer PPA
-      ansible.builtin.apt_repository:
-        repo: ppa:danielrichter2007/grub-customizer
+    - name: Add grub customizer PPA (deb822 format)
+      ansible.builtin.deb822_repository:
+        filename: danielrichter2007-grub-customizer
+        repo: |
+          Types: deb
+          URIs: http://ppa.launchpad.net/danielrichter2007/grub-customizer/ubuntu
+          Suites: {{ ansible_facts['lsb']['codename'] | default(ansible_facts['distribution_release'] | default('')) }}
+          Components: main
         state: present
       become: true
 
