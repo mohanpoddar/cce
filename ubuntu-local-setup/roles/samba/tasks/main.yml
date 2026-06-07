@@ -13,7 +13,7 @@
 
 - name: Verify directory for samba share mount point /opt/ccpldata exists. If not, create it.
   ansible.builtin.file:
-    path: /opt/ccpldata
+    path: {{ live_share_mount_points }}
     state: directory
   tags: samba-inst-package
 

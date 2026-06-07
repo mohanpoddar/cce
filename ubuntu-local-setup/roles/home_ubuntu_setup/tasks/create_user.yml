@@ -24,7 +24,7 @@
 # Create recursive directory for user cce
 - name: Create recursive directory for user cce
   ansible.builtin.file:
-    path: /home/cce/rayo/scripts/github
+    path: {{ script_dest_dir }}
     state: directory
     owner: cce
     group: cce
@@ -32,27 +32,27 @@
     mode: 0755
 
 # Copy file from $tmp_dir to /home/cce/rayo/scripts/github/
-- name: Copy file rsync_daily.sh from tmp_dir to /home/cce/rayo/scripts/github/
+- name: Copy file rsync_daily.sh from tmp_dir to {{ script_dest_dir }}/rsync_daily.sh
   ansible.builtin.copy:
-    src: "{{ tmp_dir }}/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily.sh"
-    dest: /home/cce/rayo/scripts/github/rsync_daily.sh
+    src: "{{ script_source_dir }}/rsync_daily.sh"
+    dest: "{{ script_dest_dir }}/rsync_daily.sh"
     owner: cce
     group: cce
     mode: 0655
 
-- name: Copy file rsync_daily_at_evening.sh from tmp_dir to /home/cce/rayo/scripts/github/
+- name: Copy file rsync_daily_at_evening.sh from tmp_dir to {{ script_dest_dir }}/rsync_daily_at_evening.sh
   ansible.builtin.copy:
-    src: "{{ tmp_dir }}/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/rsync_daily_at_evening.sh"
-    dest: /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh
+    src: "{{ script_source_dir }}/rsync_daily_at_evening.sh"
+    dest: "{{ script_dest_dir }}/rsync_daily_at_evening.sh"
     owner: cce
     group: cce
     mode: 0655
 
 # Copy monitoronedrive.sh to /home/cce/rayo/scripts/github/monitoronedrive.sh
-- name: Copy file monitoronedrive.sh from tmp_dir to /home/cce/rayo/scripts/github/
+- name: Copy file monitoronedrive.sh from tmp_dir to {{ script_dest_dir }}/monitoronedrive.sh
   ansible.builtin.copy:
-    src: "{{ tmp_dir }}/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/monitoronedrive.sh"
-    dest: /home/cce/rayo/scripts/github/monitoronedrive.sh
+    src: "{{ script_source_dir }}/monitoronedrive.sh"
+    dest: "{{ script_dest_dir }}/monitoronedrive.sh"
     owner: cce
     group: cce
     mode: 0655
