@@ -140,7 +140,8 @@ configure_ansible () {
         echo "Ansible is already installed. Pinging nodes"
 	    sed 's/^#host_key_checking = True/host_key_checking = False/' -i /etc/ansible/ansible.cfg
         ansible -m ping localhost
-        ansible -m ping mylearnersepoint        
+        ansible -m ping mylearnersepoint
+        ansible -m ping all        
     else
         echo "Ansible is not installed. Installing ansible..."
         apt update
