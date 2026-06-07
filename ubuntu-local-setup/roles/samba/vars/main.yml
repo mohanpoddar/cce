@@ -1,2 +1,3 @@
 ---
 # vars file for samba
+live_share_mount_points: "/opt/ccpldata"

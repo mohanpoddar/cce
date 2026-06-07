@@ -1,5 +1,5 @@
 {% set host = (ansible_facts['hostname'] | default(inventory_hostname | default('unknown_host'))) %}
-{% set datacenter_map = (datacenter_map | default({'AV-PC': 'GreaterNoida'})) %}
+{% set datacenter_map = (datacenter_map | default({'av-pc': 'GreaterNoida'})) %}
 {% set datacenter = datacenter_map.get(host, 'DefaultDC') %}
 
 {% if (first_samba_shares|default([]))|length > 0 %}

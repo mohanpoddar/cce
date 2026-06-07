@@ -4,10 +4,10 @@
 # Map hostnames to datacenter names used in generated share names
 # Add entries as needed for your environment
 datacenter_map:
-  AV-PC: "GreaterNoida"
+  av-pc: "GreaterNoida"
   WEB-01: "Mumbai-DC"
   DB-01: "Bengaluru-DC"
   TEST-VM: "TestLab"
 
 # You can add other global mappings used by multiple roles here.
-live_share_mount_points: "/opt/ccpldata"
+
