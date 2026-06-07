@@ -24,7 +24,7 @@
 # Create recursive directory for user cce
 - name: Create recursive directory for user cce
   ansible.builtin.file:
-    path: {{ script_dest_dir }}
+    path: "{{ script_dest_dir }}"
     state: directory
     owner: cce
     group: cce
