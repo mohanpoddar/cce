@@ -65,3 +65,12 @@
     owner: cce
     group: cce
     mode: 0655
+
+# Create rsync log directory /home/cce/logs/rsync
+- name: Create rsync log directory {{ rsync_log_dir }}
+  ansible.builtin.file:
+    path: "{{ rsync_log_dir }}"
+    state: directory
+    owner: cce
+    group: cce
+    mode: 0755

@@ -35,3 +35,4 @@ list_of_pip_packages:
 
 script_source_dir: "/var/tmp/repo/ubuntu-local-setup/roles/home_ubuntu_setup/files"
 script_dest_dir: "/home/cce/rayo/scripts/github"
+rsync_log_dir: "/home/cce/logs/rsync"
