@@ -157,7 +157,7 @@ configure_ansible
 
 
 echo -e "Ansible role begins.......\n"
-$ANSIBLE_CMD -l localhost -e "username=$username" -e "tmp_dir=$tmp_dir" $PLAYBOOK
+$ANSIBLE_CMD -l localhost -e "username=$username" $PLAYBOOK
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
 
 echo -e "\nAnsible role ends......."

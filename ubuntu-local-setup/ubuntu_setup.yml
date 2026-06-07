@@ -8,9 +8,6 @@
     - name: Display Hostname
       debug: var=ansible_facts['hostname']
 
-    - name: Print tmp_dir variable
-      debug: var=tmp_dir
-
 # # Add playbook roles
   roles:
   - home_ubuntu_setup
