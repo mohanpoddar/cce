@@ -10,6 +10,6 @@ datacenter_map:
   TEST-VM: "TestLab"
 
 # You can add other global mappings used by multiple roles here.
-live_share_mount_points: /opt/ccpldata
+live_share_mount_points: "/opt/ccpldata"
 script_source_dir: "/var/tmp/repo/ubuntu-local-setup/roles/home_ubuntu_setup/files"
-script_dest_dir: /home/cce/rayo/scripts/github
+script_dest_dir: "/home/cce/rayo/scripts/github"
