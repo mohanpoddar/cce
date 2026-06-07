@@ -10,4 +10,4 @@ datacenter_map:
   TEST-VM: "TestLab"
 
 # You can add other global mappings used by multiple roles here.
-ansible_python_interpreter: /usr/bin/python3
+ansible_python_interpreter: /usr/bin/python
