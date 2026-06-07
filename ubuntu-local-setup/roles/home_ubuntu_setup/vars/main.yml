@@ -33,4 +33,5 @@ list_of_pip_packages:
 # visual_studio_code_deb_architecture: >-
 #   {{ visual_studio_code_deb_architecture_mapping[ansible_architecture | lower] | default('amd64') }}
 
+script_source_dir: "/var/tmp/repo/ubuntu-local-setup/roles/home_ubuntu_setup/files"
 script_dest_dir: "/home/cce/rayo/scripts/github"
