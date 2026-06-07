@@ -13,7 +13,7 @@
   # when: username is defined
 
 - debug:
-    msg: "script_dest_dir={{ script_dest_dir | default('UNDEFINED') }} script_source_dir={{ script_source_dir | default('UNDEFINED') }}"
+    var: script_dest_dir
 
 - name: Assert required group variables are defined
   ansible.builtin.assert:
