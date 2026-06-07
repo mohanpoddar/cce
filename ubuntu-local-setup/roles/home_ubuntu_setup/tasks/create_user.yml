@@ -28,7 +28,7 @@
     state: directory
     owner: cce
     group: cce
-    recursive: yes
+    recurse: yes
     mode: 0755
 
 # Copy file from $tmp_dir to /home/cce/rayo/scripts/github/
