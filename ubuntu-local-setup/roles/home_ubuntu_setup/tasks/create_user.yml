@@ -21,6 +21,9 @@
 #     dest: /etc/sudoers.d/devopsadmin_sudo
 #     mode: 0440
 
+- debug:
+    var: script_dest_dir
+
 # Create recursive directory for user cce
 - name: Create recursive directory for user cce
   ansible.builtin.file:
