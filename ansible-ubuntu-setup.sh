@@ -186,7 +186,7 @@ configure_ansible
 
 
 echo -e "Ansible role begins.......\n"
-$ANSIBLE_CMD -l localhost -e "username=$username" $PLAYBOOK
+$ANSIBLE_CMD -l localhost -e "ansible_python_interpreter=/usr/bin/python3" -e "username=$username" $PLAYBOOK
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
 
 echo -e "\nAnsible role ends......."
