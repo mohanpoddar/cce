@@ -139,7 +139,8 @@ configure_ansible () {
     then
         echo "Ansible is already installed. Pinging nodes"
 	    sed 's/^#host_key_checking = True/host_key_checking = False/' -i /etc/ansible/ansible.cfg
-        ansible -m ping mylearnersepoint
+        ansible -m ping localhost
+        ansible -m ping mylearnersepoint        
     else
         echo "Ansible is not installed. Installing ansible..."
         apt update
@@ -158,8 +159,8 @@ configure_ansible () {
         if [ "$chk_inv_group" = "ubuntuservers" ];
         then
             echo "Initial host inventory found. Pinging nodes"
-            ansible -m ping mylearnersepoint
             ansible -m ping localhost
+            ansible -m ping mylearnersepoint
         else
         cat << EOF >> $ansible_inv_file
 # Customized Hosts
