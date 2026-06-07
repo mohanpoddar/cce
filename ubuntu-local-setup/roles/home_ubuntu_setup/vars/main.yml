@@ -32,3 +32,5 @@ list_of_pip_packages:
 # visual_studio_code_package: "{{ (visual_studio_code_build == 'insiders') | ternary('code-insiders', 'code') }}"
 # visual_studio_code_deb_architecture: >-
 #   {{ visual_studio_code_deb_architecture_mapping[ansible_architecture | lower] | default('amd64') }}
+
+script_dest_dir: "/home/cce/rayo/scripts/github"
