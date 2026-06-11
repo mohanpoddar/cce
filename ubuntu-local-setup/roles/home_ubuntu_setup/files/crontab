@@ -37,11 +37,14 @@ MAILTO=""
 # Daily evening backup at 20:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
 #30 20 * * * /bin/sh /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync_20-30.log
 
+# Daily evening backup at 21:00IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action. As per agreed this is the new time
+#00 21 * * * /bin/sh /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync_21-00.log
+
 # Daily evening backup at 21:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
 #30 21 * * * /bin/sh /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync_21-30.log
 
 # Daily evening backup at 22:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
-#30 22 * * * /bin/sh /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync_22-30.log
+#35 22 * * * /bin/sh /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync_22-30.log
 
 # Daily evening backup at 23:30IST if server is powered on. Once backup is finished server will be powered off. If backup is running then no action.
 #30 23 * * * /bin/sh /home/cce/rayo/scripts/github/rsync_daily_at_evening.sh 2> /home/cce/logs/rsync/cron-rsync_23-30.log

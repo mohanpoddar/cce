@@ -4,23 +4,23 @@
 if [ "$(hostname)" = "av-pc" ]; then
     DC="GreaterNoida"
     PS1=`ps -ef | egrep "rsync -avP /opt/ccpldata/ccplnewdata" | grep -v grep | wc -l`
-    BKP_LOC_SRC='/opt/ccpldata/ccplnewdata'
+    BKP_LOC_SRC='/opt/ccpldata/'
     BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest/'
-    RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/cceplrsyncmail.py'
+    RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cceplrsyncmail.py'
 
 elif [ "$(hostname)" = "503S" ]; then
     DC="Vashundhara"
     PS1=`ps -ef | egrep "rsync -avP /opt/ccepldata/cceplserver" | grep -v grep | wc -l`
     BKP_LOC_SRC='/opt/ccepldata/cceplserver'
     BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_cceplserver_latest/'
-    RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/cceplrsyncmail.py'
+    RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cceplrsyncmail.py'
 
 elif [ "$(hostname)" = "mylearnersepoint" ]; then
     DC="TESTLEPOINT"
     PS1=`ps -ef | egrep "rsync -avP /opt/ccpldata/mylearnersepoint" | grep -v grep | wc -l`
     BKP_LOC_SRC='/opt/ccpldata/mylearnersepoint'
     BKP_LOC_DST='/opt/backup/mylearnersepoint/'
-    RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/cceplrsyncmail.py'
+    RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cceplrsyncmail.py'
 
 else
     DC="UNKNOWN"
