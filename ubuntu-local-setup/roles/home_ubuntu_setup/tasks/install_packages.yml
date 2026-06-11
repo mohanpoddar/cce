@@ -79,16 +79,16 @@
 # - debug:
 #     var: inst_anydesk.stdout_lines
 
-# - name: "Fix Anydesk Configuration"
-#   lineinfile:
-#     path: /etc/gdm3/custom.conf
-#     # The String to Search
-#     regexp: "#WaylandEnable=false" 
-#     # The String to Replace
-#     line: "WaylandEnable=false"
-#     state: present
-#     backup: yes
-#   diff: true
+- name: "Fix Anydesk Configuration"
+  lineinfile:
+    path: /etc/gdm3/custom.conf
+    # The String to Search
+    regexp: "#WaylandEnable=false" 
+    # The String to Replace
+    line: "WaylandEnable=false"
+    state: present
+    backup: yes
+  diff: true
 
 
 # - name: Install VS Code repo (apt)
