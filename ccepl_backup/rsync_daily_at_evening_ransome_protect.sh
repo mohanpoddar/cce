@@ -48,22 +48,29 @@ if [ "$(date +%u)" -eq 7 ]; then
       backup_name="full_$(date +%F_%H%M%S)"
       backup_dir="$BKP_LOC_DST/$backup_name"
       mkdir -p "$backup_dir"
+      change_report="$backup_dir/changed_files.txt"
+      : > "$change_report"
       rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
-      printf 'Full backup created; all files included.\n' > "$backup_dir/changed_files.txt"
+      printf 'Full backup created; all files included.\n' > "$change_report"
       printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
     else
       echo "Creating daily incremental backup: $backup_dir"
       mkdir -p "$backup_dir"
+      change_report="$backup_dir/changed_files.txt"
+      : > "$change_report"
       rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
         --itemize-changes --out-format='%i %n' \
-        "$BKP_LOC_SRC/" "$backup_dir/" > "$backup_dir/changed_files.txt"
+        "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report"
     fi
   else
     backup_name="full_$(date +%F_%H%M%S)"
     backup_dir="$BKP_LOC_DST/$backup_name"
     echo "Creating weekly full backup: $backup_dir"
     mkdir -p "$backup_dir"
+    change_report="$backup_dir/changed_files.txt"
+    : > "$change_report"
     rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+    printf 'Full backup created; all files included.\n' > "$change_report"
     printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
   fi
 else
@@ -79,15 +86,19 @@ else
     backup_name="full_$(date +%F_%H%M%S)"
     backup_dir="$BKP_LOC_DST/$backup_name"
     mkdir -p "$backup_dir"
+    change_report="$backup_dir/changed_files.txt"
+    : > "$change_report"
     rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
-    printf 'Full backup created; all files included.\n' > "$backup_dir/changed_files.txt"
+    printf 'Full backup created; all files included.\n' > "$change_report"
     printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
   else
     echo "Creating daily incremental backup: $backup_dir"
     mkdir -p "$backup_dir"
+    change_report="$backup_dir/changed_files.txt"
+    : > "$change_report"
     rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
       --itemize-changes --out-format='%i %n' \
-      "$BKP_LOC_SRC/" "$backup_dir/" > "$backup_dir/changed_files.txt"
+      "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report"
   fi
 fi
 
