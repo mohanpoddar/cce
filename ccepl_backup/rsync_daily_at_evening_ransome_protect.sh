@@ -1,56 +1,87 @@
 #!/bin/bash
-#PS1=`ps -ef | grep rsync | grep -v grep | wc -l`
-PS1=`ps -ef | egrep "rsync -avP /opt/ccpldata/ccplnewdata" | grep -v grep | wc -l`
+set -euo pipefail
+
 BKP_LOC_SRC='/opt/ccpldata/ccplnewdata'
-#BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_20-12-2024/'
-BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest/'
+BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest_version'
+LOG_DIR='/home/cce/logs/rsync'
 RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/home_ubuntu_setup/files/cceplrsyncmail.py'
+KEEP_DAILY=7
+KEEP_FULL=4
+LATEST_LINK="$BKP_LOC_DST/latest"
+
+mkdir -p "$BKP_LOC_DST" "$LOG_DIR"
+
+PS1=$(ps -ef | egrep "rsync .*${BKP_LOC_SRC}" | grep -v grep | wc -l | tr -d ' ')
+starttime=$(date +'%Y-%m-%d_%H%M%S')
+log_file="$LOG_DIR/rsync_${starttime}.log"
+
+if [ "$PS1" -gt 1 ]; then
+  echo "Rsync is already running."
+  exit 0
+fi
+
+exec > >(tee -a "$log_file") 2>&1
 
 echo "Backup Source Location: $BKP_LOC_SRC"
 echo "Backup Destination Location: $BKP_LOC_DST"
+echo "Starting backup at: $(date)"
 
+if [ "$(date +%u)" -eq 7 ]; then
+  backup_name="full_$(date +%F)"
+  backup_dir="$BKP_LOC_DST/$backup_name"
+  echo "Creating weekly full backup: $backup_dir"
+  mkdir -p "$backup_dir"
+  rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+else
+  backup_name="daily_$(date +%F)"
+  backup_dir="$BKP_LOC_DST/$backup_name"
+  latest_full=""
+  if [ -d "$BKP_LOC_DST" ]; then
+    latest_full=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort | tail -n 1)
+  fi
 
-echo "Number of rsync process: $PS1"
+  if [ -z "$latest_full" ]; then
+    echo "No full backup found yet. Creating one first."
+    backup_name="full_$(date +%F)"
+    backup_dir="$BKP_LOC_DST/$backup_name"
+    mkdir -p "$backup_dir"
+    rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+  else
+    echo "Creating daily incremental backup: $backup_dir"
+    mkdir -p "$backup_dir"
+    rsync -aHAX --numeric-ids --delete --link-dest="$latest_full" "$BKP_LOC_SRC/" "$backup_dir/"
+  fi
+fi
 
+rm -f "$LATEST_LINK"
+ln -s "$backup_dir" "$LATEST_LINK"
 
-ccersync () {
+full_dirs=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort)
+full_count=$(printf '%s
+' "$full_dirs" | grep -c . || true)
+if [ "$full_count" -gt "$KEEP_FULL" ]; then
+  delete_count=$((full_count - KEEP_FULL))
+  printf '%s
+' "$full_dirs" | head -n "$delete_count" | while read -r old_dir; do
+    rm -rf "$old_dir"
+  done
+fi
 
-	if [ $PS1 -gt 1 ];
-	then
-          echo "Rsync is running."
-        else
-          starttime=$(date +'%d-%m-%Y-%H%M%S')
-	  echo "TASK STARTS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	  echo "START rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	  echo "BEFORE - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_date_20-12-2024_actual_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
+daily_dirs=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'daily_*' | sort)
+daily_count=$(printf '%s
+' "$daily_dirs" | grep -c . || true)
+if [ "$daily_count" -gt "$KEEP_DAILY" ]; then
+  delete_count=$((daily_count - KEEP_DAILY))
+  printf '%s
+' "$daily_dirs" | head -n "$delete_count" | while read -r old_dir; do
+    rm -rf "$old_dir"
+  done
+fi
 
-          rsync -avP $BKP_LOC_SRC $BKP_LOC_DST >> /home/cce/logs/rsync/rsync_in_backup_location_date_20-12-2024_actual_$starttime.log 2>&1
+echo "Backup completed at: $(date)"
 
-	  echo "AFTER - Check for rsync backup log: /home/cce/logs/rsync/rsync_in_backup_location_date_20-12-2024_actual_$starttime.log" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	  echo "END rsync at : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	  echo "Rysnc is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	  
-	  sleep 5
+echo "Log file: $log_file"
 
-          echo "Re-verifying if Rsync is running : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-
-          if [ $PS1 -gt 1 ];
-          then
-            echo "Rsync is still running : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-          else
-	    echo "Reverified and confiremd that Rsync is finished : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    echo "Going to poweroff : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    echo "Capture Time Before Server Powered Off : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    echo "Powered Off server at : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    echo "Final Cron Job Completed at : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    echo "TASK ENDS AT : $(date)" >> /home/cce/logs/rsync/rsync_cron_$starttime.log
-	    python3 $RSYNC_EMAIL_FILE
-	    sleep 5
-	    #sudo /usr/sbin/reboot
-	    sudo /usr/sbin/poweroff
-	  fi  
-
-        fi
-}
-
-ccersync
+if [ -f "$RSYNC_EMAIL_FILE" ]; then
+  python3 "$RSYNC_EMAIL_FILE"
+fi
