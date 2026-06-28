@@ -50,15 +50,14 @@ if [ "$(date +%u)" -eq 7 ]; then
       backup_dir="$BKP_LOC_DST/$backup_name"
       mkdir -p "$backup_dir"
       change_report="$backup_dir/changed_files.txt"
-      : > "$change_report"
-      rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
       printf 'Full backup created; all files included.\n' > "$change_report"
+      rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
       printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
     else
       echo "Creating daily incremental backup: $backup_dir"
       mkdir -p "$backup_dir"
       change_report="$backup_dir/changed_files.txt"
-      : > "$change_report"
+      printf 'No changes detected.\n' > "$change_report"
       rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
         --itemize-changes --out-format='%i %n' \
         "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report" 2>&1
@@ -96,7 +95,7 @@ else
     echo "Creating daily incremental backup: $backup_dir"
     mkdir -p "$backup_dir"
     change_report="$backup_dir/changed_files.txt"
-    : > "$change_report"
+    printf 'No changes detected.\n' > "$change_report"
     rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
       --itemize-changes --out-format='%i %n' \
       "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report" 2>&1
