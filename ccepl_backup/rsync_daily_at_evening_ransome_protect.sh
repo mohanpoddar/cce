@@ -12,6 +12,74 @@ LATEST_CHANGE_REPORT_FILE="$BKP_LOC_DST/latest_changed_files.txt"
 FULL_WEEK_MARKER="$BKP_LOC_DST/.last_full_backup_week"
 CURRENT_WEEK=$(date +%G-%V)
 
+write_full_change_report() {
+  report_file=$1
+
+  {
+    printf 'Backup type: FULL\n'
+    printf 'Backup time: %s\n' "$(date)"
+    printf 'Source: %s\n' "$BKP_LOC_SRC"
+    printf '\n'
+    printf 'All files are included in this full backup.\n'
+  } > "$report_file"
+}
+
+write_daily_change_report() {
+  previous_backup=$1
+  current_backup=$2
+  report_file=$3
+  tmp_changed="${report_file}.changed"
+
+  : > "$tmp_changed"
+
+  {
+    printf 'Backup type: DAILY_INCREMENTAL\n'
+    printf 'Backup time: %s\n' "$(date)"
+    printf 'Source: %s\n' "$BKP_LOC_SRC"
+    printf 'Previous backup: %s\n' "$previous_backup"
+    printf 'Current backup: %s\n' "$current_backup"
+    printf '\n'
+    printf 'Incremental file list:\n'
+  } > "$report_file"
+
+  (
+    cd "$current_backup"
+    find . \( -type f -o -type l \) -print | sort
+  ) | while IFS= read -r rel_path; do
+    old_path="$previous_backup/$rel_path"
+    new_path="$current_backup/$rel_path"
+
+    if [ ! -e "$old_path" ] && [ ! -L "$old_path" ]; then
+      printf 'ADDED %s\n' "${rel_path#./}" >> "$tmp_changed"
+    elif [ -L "$old_path" ] || [ -L "$new_path" ]; then
+      if [ ! -L "$old_path" ] || [ ! -L "$new_path" ] || [ "$(readlink "$old_path")" != "$(readlink "$new_path")" ]; then
+        printf 'MODIFIED %s\n' "${rel_path#./}" >> "$tmp_changed"
+      fi
+    elif [ ! "$old_path" -ef "$new_path" ]; then
+      printf 'MODIFIED %s\n' "${rel_path#./}" >> "$tmp_changed"
+    fi
+  done
+
+  (
+    cd "$previous_backup"
+    find . \( -type f -o -type l \) -print | sort
+  ) | while IFS= read -r rel_path; do
+    new_path="$current_backup/$rel_path"
+
+    if [ ! -e "$new_path" ] && [ ! -L "$new_path" ]; then
+      printf 'DELETED %s\n' "${rel_path#./}" >> "$tmp_changed"
+    fi
+  done
+
+  if [ -s "$tmp_changed" ]; then
+    cat "$tmp_changed" >> "$report_file"
+  else
+    printf 'No changes detected.\n' >> "$report_file"
+  fi
+
+  rm -f "$tmp_changed"
+}
+
 mkdir -p "$BKP_LOC_DST" "$LOG_DIR"
 
 PS1=$(ps -ef | egrep "rsync .*${BKP_LOC_SRC}" | grep -v grep | wc -l | tr -d ' ')
@@ -50,17 +118,15 @@ if [ "$(date +%u)" -eq 7 ]; then
       backup_dir="$BKP_LOC_DST/$backup_name"
       mkdir -p "$backup_dir"
       change_report="$backup_dir/changed_files.txt"
-      printf 'Full backup created; all files included.\n' > "$change_report"
       rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+      write_full_change_report "$change_report"
       printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
     else
       echo "Creating daily incremental backup: $backup_dir"
       mkdir -p "$backup_dir"
       change_report="$backup_dir/changed_files.txt"
-      printf 'No changes detected.\n' > "$change_report"
-      rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
-        --itemize-changes --out-format='%i %n' \
-        "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report" 2>&1
+      rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" "$BKP_LOC_SRC/" "$backup_dir/"
+      write_daily_change_report "$latest_backup" "$backup_dir" "$change_report"
     fi
   else
     backup_name="full_$(date +%F_%H%M%S)"
@@ -68,9 +134,8 @@ if [ "$(date +%u)" -eq 7 ]; then
     echo "Creating weekly full backup: $backup_dir"
     mkdir -p "$backup_dir"
     change_report="$backup_dir/changed_files.txt"
-    : > "$change_report"
     rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
-    printf 'Full backup created; all files included.\n' > "$change_report"
+    write_full_change_report "$change_report"
     printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
   fi
 else
@@ -87,18 +152,15 @@ else
     backup_dir="$BKP_LOC_DST/$backup_name"
     mkdir -p "$backup_dir"
     change_report="$backup_dir/changed_files.txt"
-    : > "$change_report"
     rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
-    printf 'Full backup created; all files included.\n' > "$change_report"
+    write_full_change_report "$change_report"
     printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
   else
     echo "Creating daily incremental backup: $backup_dir"
     mkdir -p "$backup_dir"
     change_report="$backup_dir/changed_files.txt"
-    printf 'No changes detected.\n' > "$change_report"
-    rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
-      --itemize-changes --out-format='%i %n' \
-      "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report" 2>&1
+    rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" "$BKP_LOC_SRC/" "$backup_dir/"
+    write_daily_change_report "$latest_backup" "$backup_dir" "$change_report"
   fi
 fi
 
