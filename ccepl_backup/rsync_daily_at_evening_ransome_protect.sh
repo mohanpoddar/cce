@@ -61,7 +61,7 @@ if [ "$(date +%u)" -eq 7 ]; then
       : > "$change_report"
       rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
         --itemize-changes --out-format='%i %n' \
-        "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report"
+        "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report" 2>&1
     fi
   else
     backup_name="full_$(date +%F_%H%M%S)"
@@ -99,7 +99,7 @@ else
     : > "$change_report"
     rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" \
       --itemize-changes --out-format='%i %n' \
-      "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report"
+      "$BKP_LOC_SRC/" "$backup_dir/" > "$change_report" 2>&1
   fi
 fi
 
@@ -111,7 +111,7 @@ else
   : > "$LATEST_CHANGE_REPORT_FILE"
 fi
 
-echo "Change report: $change_report"
+echo "Change report for this backup: $change_report"
 
 full_dirs=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort)
 full_count=$(printf '%s
