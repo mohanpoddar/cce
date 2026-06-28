@@ -1,5 +1,5 @@
-#!/bin/bash
-set -euo pipefail
+#!/bin/sh
+set -eu
 
 BKP_LOC_SRC='/opt/ccpldata/ccplnewdata'
 BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest_version'
@@ -20,7 +20,7 @@ if [ "$PS1" -gt 1 ]; then
   exit 0
 fi
 
-exec > >(tee -a "$log_file") 2>&1
+exec >>"$log_file" 2>&1
 
 echo "Backup Source Location: $BKP_LOC_SRC"
 echo "Backup Destination Location: $BKP_LOC_DST"
