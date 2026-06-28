@@ -38,13 +38,13 @@ if [ "$(date +%u)" -eq 7 ]; then
     echo "Weekly full backup already created for week $CURRENT_WEEK. Creating daily incremental backup instead."
     backup_name="daily_$(date +%F_%H%M%S)"
     backup_dir="$BKP_LOC_DST/$backup_name"
-    latest_full=""
+    latest_backup=""
     if [ -d "$BKP_LOC_DST" ]; then
-      latest_full=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort | tail -n 1)
+      latest_backup=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d \( -name 'full_*' -o -name 'daily_*' \) | sort | tail -n 1)
     fi
 
-    if [ -z "$latest_full" ]; then
-      echo "No full backup found yet. Creating one first."
+    if [ -z "$latest_backup" ]; then
+      echo "No backup found yet. Creating a full backup first."
       backup_name="full_$(date +%F_%H%M%S)"
       backup_dir="$BKP_LOC_DST/$backup_name"
       mkdir -p "$backup_dir"
@@ -53,7 +53,7 @@ if [ "$(date +%u)" -eq 7 ]; then
     else
       echo "Creating daily incremental backup: $backup_dir"
       mkdir -p "$backup_dir"
-      rsync -aHAX --numeric-ids --delete --link-dest="$latest_full" "$BKP_LOC_SRC/" "$backup_dir/"
+      rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" "$BKP_LOC_SRC/" "$backup_dir/"
     fi
   else
     backup_name="full_$(date +%F_%H%M%S)"
@@ -66,13 +66,13 @@ if [ "$(date +%u)" -eq 7 ]; then
 else
   backup_name="daily_$(date +%F_%H%M%S)"
   backup_dir="$BKP_LOC_DST/$backup_name"
-  latest_full=""
+  latest_backup=""
   if [ -d "$BKP_LOC_DST" ]; then
-    latest_full=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort | tail -n 1)
+    latest_backup=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d \( -name 'full_*' -o -name 'daily_*' \) | sort | tail -n 1)
   fi
 
-  if [ -z "$latest_full" ]; then
-    echo "No full backup found yet. Creating one first."
+  if [ -z "$latest_backup" ]; then
+    echo "No backup found yet. Creating a full backup first."
     backup_name="full_$(date +%F_%H%M%S)"
     backup_dir="$BKP_LOC_DST/$backup_name"
     mkdir -p "$backup_dir"
@@ -81,7 +81,7 @@ else
   else
     echo "Creating daily incremental backup: $backup_dir"
     mkdir -p "$backup_dir"
-    rsync -aHAX --numeric-ids --delete --link-dest="$latest_full" "$BKP_LOC_SRC/" "$backup_dir/"
+    rsync -aHAX --numeric-ids --delete --link-dest="$latest_backup" "$BKP_LOC_SRC/" "$backup_dir/"
   fi
 fi
 
