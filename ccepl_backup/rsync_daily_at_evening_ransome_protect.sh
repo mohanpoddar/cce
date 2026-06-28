@@ -8,6 +8,8 @@ RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/hom
 KEEP_DAILY=7
 KEEP_FULL=4
 LATEST_LINK="$BKP_LOC_DST/latest"
+FULL_WEEK_MARKER="$BKP_LOC_DST/.last_full_backup_week"
+CURRENT_WEEK=$(date +%G-%V)
 
 mkdir -p "$BKP_LOC_DST" "$LOG_DIR"
 
@@ -27,11 +29,40 @@ echo "Backup Destination Location: $BKP_LOC_DST"
 echo "Starting backup at: $(date)"
 
 if [ "$(date +%u)" -eq 7 ]; then
-  backup_name="full_$(date +%F_%H%M%S)"
-  backup_dir="$BKP_LOC_DST/$backup_name"
-  echo "Creating weekly full backup: $backup_dir"
-  mkdir -p "$backup_dir"
-  rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+  last_full_week=""
+  if [ -f "$FULL_WEEK_MARKER" ]; then
+    last_full_week=$(cat "$FULL_WEEK_MARKER" 2>/dev/null || true)
+  fi
+
+  if [ "$last_full_week" = "$CURRENT_WEEK" ]; then
+    echo "Weekly full backup already created for week $CURRENT_WEEK. Creating daily incremental backup instead."
+    backup_name="daily_$(date +%F_%H%M%S)"
+    backup_dir="$BKP_LOC_DST/$backup_name"
+    latest_full=""
+    if [ -d "$BKP_LOC_DST" ]; then
+      latest_full=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort | tail -n 1)
+    fi
+
+    if [ -z "$latest_full" ]; then
+      echo "No full backup found yet. Creating one first."
+      backup_name="full_$(date +%F_%H%M%S)"
+      backup_dir="$BKP_LOC_DST/$backup_name"
+      mkdir -p "$backup_dir"
+      rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+      printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
+    else
+      echo "Creating daily incremental backup: $backup_dir"
+      mkdir -p "$backup_dir"
+      rsync -aHAX --numeric-ids --delete --link-dest="$latest_full" "$BKP_LOC_SRC/" "$backup_dir/"
+    fi
+  else
+    backup_name="full_$(date +%F_%H%M%S)"
+    backup_dir="$BKP_LOC_DST/$backup_name"
+    echo "Creating weekly full backup: $backup_dir"
+    mkdir -p "$backup_dir"
+    rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+    printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
+  fi
 else
   backup_name="daily_$(date +%F_%H%M%S)"
   backup_dir="$BKP_LOC_DST/$backup_name"
@@ -46,6 +77,7 @@ else
     backup_dir="$BKP_LOC_DST/$backup_name"
     mkdir -p "$backup_dir"
     rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
+    printf '%s\n' "$CURRENT_WEEK" > "$FULL_WEEK_MARKER"
   else
     echo "Creating daily incremental backup: $backup_dir"
     mkdir -p "$backup_dir"
