@@ -8,6 +8,7 @@ RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cce/ubuntu-local-setup/roles/hom
 KEEP_DAILY=7
 KEEP_FULL=4
 LATEST_LINK="$BKP_LOC_DST/latest"
+LATEST_CHANGE_REPORT_LINK="$BKP_LOC_DST/latest_changed_files.txt"
 FULL_WEEK_MARKER="$BKP_LOC_DST/.last_full_backup_week"
 CURRENT_WEEK=$(date +%G-%V)
 
@@ -102,8 +103,11 @@ else
   fi
 fi
 
-rm -f "$LATEST_LINK"
+rm -f "$LATEST_LINK" "$LATEST_CHANGE_REPORT_LINK"
 ln -s "$backup_dir" "$LATEST_LINK"
+ln -s "$change_report" "$LATEST_CHANGE_REPORT_LINK"
+
+echo "Change report: $change_report"
 
 full_dirs=$(find "$BKP_LOC_DST" -maxdepth 1 -mindepth 1 -type d -name 'full_*' | sort)
 full_count=$(printf '%s
