@@ -27,13 +27,13 @@ echo "Backup Destination Location: $BKP_LOC_DST"
 echo "Starting backup at: $(date)"
 
 if [ "$(date +%u)" -eq 7 ]; then
-  backup_name="full_$(date +%F)"
+  backup_name="full_$(date +%F_%H%M%S)"
   backup_dir="$BKP_LOC_DST/$backup_name"
   echo "Creating weekly full backup: $backup_dir"
   mkdir -p "$backup_dir"
   rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
 else
-  backup_name="daily_$(date +%F)"
+  backup_name="daily_$(date +%F_%H%M%S)"
   backup_dir="$BKP_LOC_DST/$backup_name"
   latest_full=""
   if [ -d "$BKP_LOC_DST" ]; then
@@ -42,7 +42,7 @@ else
 
   if [ -z "$latest_full" ]; then
     echo "No full backup found yet. Creating one first."
-    backup_name="full_$(date +%F)"
+    backup_name="full_$(date +%F_%H%M%S)"
     backup_dir="$BKP_LOC_DST/$backup_name"
     mkdir -p "$backup_dir"
     rsync -aHAX --numeric-ids --delete "$BKP_LOC_SRC/" "$backup_dir/"
