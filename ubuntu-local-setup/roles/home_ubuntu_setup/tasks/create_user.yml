@@ -66,6 +66,14 @@
     group: cce
     mode: 0655
 
+- name: Copy file cceplrsyncmail_ransome.py to {{ script_dest_dir }}/cceplrsyncmail_ransome.py
+  ansible.builtin.copy:
+    src: "{{ script_source_dir }}/cceplrsyncmail_ransome.py"
+    dest: "{{ script_dest_dir }}/cceplrsyncmail_ransome.py"
+    owner: cce
+    group: cce
+    mode: 0655
+
 # Create rsync log directory /home/cce/logs/rsync
 - name: Create rsync log directory {{ rsync_log_dir }}
   ansible.builtin.file:

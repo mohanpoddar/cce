@@ -9,15 +9,15 @@ The current backup approach is designed to protect the live data from ransomware
 ### 1. Weekly full backup
 A full backup is created once per week.
 
-- Folder naming format: full_YYYY-MM-DD
+- Folder naming format: full_YYYY-MM-DD_HHMMSS
 - Purpose: provides a full restore point for disaster recovery
 
 ### 2. Daily incremental backup
 A daily backup is created on the other days.
 
-- Folder naming format: daily_YYYY-MM-DD
+- Folder naming format: daily_YYYY-MM-DD_HHMMSS
 - Purpose: captures daily changes and reduces backup size
-- Uses rsync with hard-link based inheritance from the latest full backup
+- Uses rsync with hard-link based inheritance from the latest snapshot
 
 ### 3. Retention policy
 The backup location keeps:
@@ -32,6 +32,7 @@ The backup root is:
 - /opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest_version
 
 Each backup run creates a new dated folder inside this location.
+The `latest` symlink points to the most recently completed snapshot.
 
 ## Restore Procedure
 
@@ -39,9 +40,8 @@ Each backup run creates a new dated folder inside this location.
 If the live 1 TB data disk fails:
 1. Replace or recreate the live disk.
 2. Mount the new disk at the correct location.
-3. Restore the latest full backup folder to the live data path.
-4. If needed, apply the latest daily backup on top.
-5. Verify permissions and Samba access.
+3. Restore the latest known-good snapshot folder to the live data path.
+4. Verify permissions and Samba access.
 
 ### Restore after ransomware or accidental deletion
 If files are encrypted or deleted:
@@ -51,8 +51,9 @@ If files are encrypted or deleted:
 4. Re-enable access after verification.
 
 ## Operational Notes
-- The backup script checks whether another rsync backup is already running.
+- The backup script uses a lock to prevent overlapping backup runs.
 - Backup logs are written under /home/cce/logs/rsync.
+- The latest change report is copied to `latest_changed_files.txt` in the backup root.
 - The script sends an email notification if the configured email script exists.
 
 ## Recommended Next Step
