@@ -5,27 +5,27 @@
   include_vars: "{{ ansible_facts['os_family'] }}.yml"
 
 - name: Inst - Update Repositories Cache
-  ansible.builtin.apt:
+  apt:
     update_cache: true
   when:
     - ansible_facts['os_family'] == 'Debian'
   tags: samba-inst-package
 
 - name: Verify directory for samba share mount point /opt/ccpldata exists. If not, create it.
-  ansible.builtin.file:
+  file:
     path: "{{ live_share_mount_points }}"
     state: directory
   tags: samba-inst-package
 
 - name: Inst - Samba Packages
-  ansible.builtin.package:
+  package:
     name: "{{ samba_packages }}"
     state: "present"
   tags: samba-inst-package
 
 # Backup samba configuration file (timestamped)
 - name: Backup samba configuration file (timestamped)
-  ansible.builtin.copy:
+  copy:
     src: "{{ samba_configuration }}"
     dest: "{{ samba_configuration }}.{{ ansible_facts['date_time'].date }}-{{ ansible_facts['date_time'].time }}"
     remote_src: true
@@ -35,7 +35,7 @@
 
 # Configure Samba: set workgroup in the existing smb.conf and append share blocks
 - name: Ensure Samba workgroup is set from role variable
-  ansible.builtin.replace:
+  replace:
     path: "{{ samba_configuration }}"
     regexp: '(?i)^[ \t]*#?[ \t]*(workgroup|workgrpup)[ \t]*=.*$'
     replace: '   workgroup = {{ samba_workgroup }}'
@@ -44,7 +44,7 @@
     - samba-conf
 
 - name: Ensure single Samba workgroup line exists under [global]
-  ansible.builtin.lineinfile:
+  lineinfile:
     path: "{{ samba_configuration }}"
     insertafter: '^\\[global\\]'
     line: '   workgroup = {{ samba_workgroup }}'
@@ -56,7 +56,7 @@
     - samba-conf
 
 - name: Add Samba share configuration
-  ansible.builtin.blockinfile:
+  blockinfile:
     path: "{{ samba_configuration }}"
     block: "{{ lookup('template', 'smb_share.j2') }}"
     insertafter: EOF
@@ -66,7 +66,7 @@
     - samba-conf
 
 - name: Validate Samba configuration with testparm
-  ansible.builtin.command:
+  command:
     cmd: "testparm -s {{ samba_configuration }}"
   register: testparm_result
   changed_when: false
@@ -75,7 +75,7 @@
     - samba-conf
 
 # - name: Conf - Samba
-#   ansible.builtin.template:
+#   template:
 #     dest: "{{ samba_configuration }}"
 #     src: smb.conf.j2
 #     validate: 'testparm -s %s'
@@ -103,5 +103,29 @@
 
 - debug:
     var: list_share.results[0].stdout_lines
+
+- name: Stop Samba services
+  service:
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - smbd
+    - nmbd
+
+- name: Disable Samba services from starting on boot
+  service:
+    name: "{{ item }}"
+    enabled: false
+  loop:
+    - smbd
+    - nmbd
+
+- name: Mask Samba services to prevent any manual starting
+  systemd:
+    name: "{{ item }}"
+    masked: yes
+  loop:
+    - smbd
+    - nmbd
 
 
