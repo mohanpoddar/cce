@@ -110,6 +110,10 @@
   set_fact:
     live_samba_server_status : "{{ live_samba_server_status | default(false) }}"
 
+- name: Display live_samba_server_status
+  debug:
+    var: live_samba_server_status
+
 - block:
     - name: Stop Samba services
       service:
