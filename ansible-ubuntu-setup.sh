@@ -42,11 +42,13 @@ backup_conflicting_ppas () {
     done
 }
 
+apt_update () {
 apt upgrade -y
 # backup any conflicting PPA source files before updating package cache
 backup_conflicting_ppas
 
 apt-get update
+}
 
 # Install basic initial packages
 pkg_install () {
@@ -180,6 +182,7 @@ EOF
 
 
 # # # Calling functions
+# apt_update
 # pkg_install
 # user_account_setup
 # install_ssh
