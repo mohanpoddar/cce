@@ -19,13 +19,14 @@ ansible_inv_file=/etc/ansible/hosts
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
 ANSIBLE_CMD=/usr//bin/ansible-playbook
 
-while getopts h:o:u: option
+while getopts h:o:u:s: option
 do 
     case "${option}"
         in
         h)hostname=${OPTARG};;
         o)orgusername=${OPTARG};;
         u)username=${OPTARG};;
+        s)live_samba_server_status=${OPTARG};;
     esac
 done
 
