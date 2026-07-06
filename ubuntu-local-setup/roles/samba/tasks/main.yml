@@ -126,7 +126,7 @@
   debug:
     var: samba_service_status_pre.results[0].stdout_lines
 
-# Unmask, enable and start Samba services if live_samba_server_status is true, else stop and disable the services.
+# Unmask, enable and start Samba services if live_samba_server_status is true.
 - block:
     - name: Unmask Samba services to allow starting
       systemd:
@@ -153,6 +153,7 @@
         - nmbd
   when: live_samba_server_status == "true"
 
+# Mask, disable and stop Samba services if live_samba_server_status is false.
 - block:
     - name: Stop Samba services
       service:
