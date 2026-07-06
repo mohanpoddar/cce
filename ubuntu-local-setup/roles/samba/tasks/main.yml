@@ -114,6 +114,45 @@
   debug:
     var: live_samba_server_status
 
+- name: Display samba service status - pre
+  shell: systemctl is-active {{ item }}
+  loop:
+    - smbd
+    - nmbd
+  register: samba_service_status_pre
+  ignore_errors: true
+
+- name: Display samba service status
+  debug:
+    var: samba_service_status_pre.results[0].stdout_lines
+
+# Unmask, enable and start Samba services if live_samba_server_status is true, else stop and disable the services.
+- block:
+    - name: Unmask Samba services to allow starting
+      systemd:
+        name: "{{ item }}"
+        masked: no
+      loop:
+        - smbd
+        - nmbd
+
+    - name: Enable Samba services to start on boot
+      service:
+        name: "{{ item }}"
+        enabled: true
+      loop:
+        - smbd
+        - nmbd
+
+    - name: Start Samba services
+      service:
+        name: "{{ item }}"
+        state: started
+      loop:
+        - smbd
+        - nmbd
+  when: live_samba_server_status == true
+
 - block:
     - name: Stop Samba services
       service:
@@ -139,3 +178,15 @@
         - smbd
         - nmbd
   when: live_samba_server_status == false
+
+- name: Display samba service status - post
+  shell: systemctl is-active {{ item }}
+  loop:
+    - smbd
+    - nmbd
+  register: samba_service_status_post
+  ignore_errors: true
+
+- name: Display samba service status
+  debug:
+    var: samba_service_status_post.results[0].stdout_lines
