@@ -105,28 +105,33 @@
 - debug:
     var: list_share.results[0].stdout_lines
 
-- name: Stop Samba services
-  service:
-    name: "{{ item }}"
-    state: stopped
-  loop:
-    - smbd
-    - nmbd
+# Set fact for live_samba_server=true and variable value will be passed from command line when running the playbook. If not passed, default value will be false. This is used to determine if the samba server is live or not. If live, then stop and disable the samba services.
+- name: Set fact for live_samba_server
+  set_fact:
+    live_samba_server_status : "{{ live_samba_server_status | default(false) }}"
 
-- name: Disable Samba services from starting on boot
-  service:
-    name: "{{ item }}"
-    enabled: false
-  loop:
-    - smbd
-    - nmbd
+- block:
+    - name: Stop Samba services
+      service:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - smbd
+        - nmbd
 
-- name: Mask Samba services to prevent any manual starting
-  systemd:
-    name: "{{ item }}"
-    masked: yes
-  loop:
-    - smbd
-    - nmbd
+    - name: Disable Samba services from starting on boot
+      service:
+        name: "{{ item }}"
+        enabled: false
+      loop:
+        - smbd
+        - nmbd
 
-
+    - name: Mask Samba services to prevent any manual starting
+      systemd:
+        name: "{{ item }}"
+        masked: yes
+      loop:
+        - smbd
+        - nmbd
+  when: live_samba_server_status == false
