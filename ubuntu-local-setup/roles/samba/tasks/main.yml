@@ -151,7 +151,7 @@
       loop:
         - smbd
         - nmbd
-  when: samba_service_status_pre.results[0].stdout_lines == true
+  when: samba_service_status_pre.results[0].stdout_lines == "true"
 
 - block:
     - name: Stop Samba services
@@ -177,7 +177,7 @@
       loop:
         - smbd
         - nmbd
-  when: samba_service_status_pre.results[0].stdout_lines == false
+  when: samba_service_status_pre.results[0].stdout_lines == "false"
 
 - name: Display samba service status - post
   shell: systemctl is-active {{ item }}
