@@ -108,7 +108,7 @@
 # Set fact for live_samba_server=true and variable value will be passed from command line when running the playbook. If not passed, default value will be false. This is used to determine if the samba server is live or not. If live, then stop and disable the samba services.
 - name: Set fact for live_samba_server
   set_fact:
-    live_samba_server_status : "{{ live_samba_server_status | default(false) }}"
+    live_samba_server_status : "{{ live_samba_server_status  | default(false) }}"
 
 - name: Display live_samba_server_status
   debug:
@@ -151,7 +151,7 @@
       loop:
         - smbd
         - nmbd
-  when: samba_service_status_pre.results[0].stdout_lines == "true"
+  when: live_samba_server_status == "true"
 
 - block:
     - name: Stop Samba services
@@ -177,7 +177,7 @@
       loop:
         - smbd
         - nmbd
-  when: samba_service_status_pre.results[0].stdout_lines == "false"
+  when: live_samba_server_status == "false"
 
 - name: Display samba service status - post
   shell: systemctl is-active {{ item }}
