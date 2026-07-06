@@ -45,10 +45,10 @@ backup_conflicting_ppas () {
 apt_update () {
 apt upgrade -y
 # backup any conflicting PPA source files before updating package cache
-backup_conflicting_ppas
-
 apt-get update
 }
+
+backup_conflicting_ppas
 
 # Install basic initial packages
 pkg_install () {
