@@ -183,11 +183,11 @@ EOF
 
 
 # # # Calling functions
-# apt_update
-# pkg_install
-# user_account_setup
-# install_ssh
-# config_python_alternative
+apt_update
+pkg_install
+user_account_setup
+install_ssh
+config_python_alternative
 configure_ansible
 
 
