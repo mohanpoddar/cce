@@ -151,6 +151,16 @@
       loop:
         - smbd
         - nmbd
+
+    - name: List Samba share
+      shell: echo {{ item.password }} | smbclient -L {{ ansible_facts['all_ipv4_addresses'][0] }} -U {{ item.name }}
+      with_items: "{{ samba_users }}"
+      no_log: true
+      register: list_share_01
+      ignore_errors: true
+
+    - debug:
+        var: list_share_01.results[0].stdout_lines
   when: live_samba_server_status == "true"
 
 # Mask, disable and stop Samba services if live_samba_server_status is false.
