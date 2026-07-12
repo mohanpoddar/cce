@@ -198,6 +198,6 @@
   register: samba_service_status_post
   ignore_errors: true
 
-- name: Display samba service status
+- name: Display final samba service status
   debug:
     var: samba_service_status_post.results[0].stdout_lines
