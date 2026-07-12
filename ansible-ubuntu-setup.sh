@@ -183,11 +183,22 @@ EOF
 
 
 # # # Calling functions
+echo -e "Calling functions apt_update .......\n"
 apt_update
+
+echo -e "Calling functions pkg_install .......\n"
 pkg_install
+
+echo -e "Calling functions user_account_setup .......\n"
 user_account_setup
+
+echo -e "Calling functions install_ssh .......\n"
 install_ssh
+
+echo -e "Calling functions config_python_alternative .......\n"
 config_python_alternative
+
+echo -e "Calling functions configure_ansible .......\n"
 configure_ansible
 
 
