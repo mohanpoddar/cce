@@ -6,27 +6,13 @@ venv_path: "{{ app_parent_dir }}/.venv"
 
 # Actions displayed in the dashboard (name, icon key, command)
 streamlit_actions:
-    - name: "Unmask SMB service"
-        icon: "unmask"
-        command: "/usr/bin/systemctl unmask smbd"
-    - name: "Mask SMB service"
-        icon: "mask"
-        command: "/usr/bin/systemctl mask smbd"
-    - name: "Enable SMB service"
-        icon: "enable"
-        command: "/usr/bin/systemctl enable smbd"
-    - name: "Disable SMB service"
-        icon: "disable"
-        command: "/usr/bin/systemctl disable smbd"
-    - name: "Stop SMB service"
-        icon: "stop"
-        command: "/usr/bin/systemctl stop smbd"
-    - name: "Start SMB service"
-        icon: "start"
-        command: "/usr/bin/systemctl start smbd"
-    - name: "Status SMB service"
-        icon: "status"
-        command: "/usr/bin/systemctl status smbd"
+  - { name: "Unmask SMB service", icon: "unmask", command: "/usr/bin/systemctl unmask smbd" }
+  - { name: "Mask SMB service",   icon: "mask",   command: "/usr/bin/systemctl mask smbd" }
+  - { name: "Enable SMB service", icon: "enable", command: "/usr/bin/systemctl enable smbd" }
+  - { name: "Disable SMB service",icon: "disable",command: "/usr/bin/systemctl disable smbd" }
+  - { name: "Stop SMB service",   icon: "stop",   command: "/usr/bin/systemctl stop smbd" }
+  - { name: "Start SMB service",  icon: "start",  command: "/usr/bin/systemctl start smbd" }
+  - { name: "Status SMB service", icon: "status", command: "/usr/bin/systemctl status smbd" }
 
 # Fallback for older usage: keep `streamlit_commands` supported but prefer `streamlit_actions`.
 streamlit_commands: []
