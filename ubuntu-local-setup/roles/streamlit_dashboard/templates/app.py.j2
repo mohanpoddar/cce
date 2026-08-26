@@ -1,6 +1,7 @@
 import streamlit as st
 import subprocess
 import shlex
+from pathlib import Path
 
 st.set_page_config(page_title="Devopsadmin Dashboard", page_icon="📊")
 st.markdown("""
@@ -61,16 +62,25 @@ def append_log(entry):
         pass
 
 for idx, action in enumerate(actions):
-    # path to icon asset (role-managed)
-    icon_path = f"file://{base_assets_dir}/{action['icon']}.svg"
+    # load SVG content from assets directory and embed inline (role-controlled)
+    svg_content = ""
+    try:
+        svg_path = Path(base_assets_dir) / f"{action['icon']}.svg"
+        if svg_path.exists():
+            svg_content = svg_path.read_text(encoding='utf-8')
+    except Exception:
+        svg_content = ""
 
     with st.container():
         st.markdown("<div class='card'>", unsafe_allow_html=True)
         cols = st.columns([0.12, 0.68, 0.2])
         with cols[0]:
-            st.markdown(f"<div class='icon-wrap'><img src='{icon_path}' width='48' /></div>", unsafe_allow_html=True)
+            if svg_content:
+                st.markdown(f"<div class='icon-wrap'>{svg_content}</div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div class='icon-wrap'></div>", unsafe_allow_html=True)
         with cols[1]:
-            st.markdown(f"<div class='title'>{action['name']}</div>")
+            st.markdown(f"<div class='title'>{action['name']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='subtitle'>{action['command']}</div>", unsafe_allow_html=True)
         with cols[2]:
             run_key = f"run_{idx}"
