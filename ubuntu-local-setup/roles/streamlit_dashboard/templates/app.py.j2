@@ -76,13 +76,16 @@ if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/d
     c1, c2 = st.columns([0.5,0.5])
     # Enable primary
     try:
-        enable_cmd = next((a['command'] for a in actions if a['icon']=='enable_server'), None)
+        enable_action = next((a for a in actions if a['icon']=='enable_server'), None)
+        enable_cmd = enable_action['command'] if enable_action else None
+        enable_icon = enable_action.get('icon') if enable_action else 'enable_server'
     except Exception:
         enable_cmd = None
+        enable_icon = 'enable_server'
     with c1:
-        if enable_cmd:
+            if enable_cmd:
             try:
-                p = Path(base_assets_dir) / 'enable_server.svg'
+                p = Path(base_assets_dir) / f"{enable_icon}.svg"
                 svg = p.read_text(encoding='utf-8') if p.exists() else ''
             except Exception:
                 svg = ''
@@ -100,13 +103,16 @@ if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/d
 
     # Disable primary
     try:
-        disable_cmd = next((a['command'] for a in actions if a['icon']=='disable_server'), None)
+        disable_action = next((a for a in actions if a['icon']=='disable_server'), None)
+        disable_cmd = disable_action['command'] if disable_action else None
+        disable_icon = disable_action.get('icon') if disable_action else 'disable_server'
     except Exception:
         disable_cmd = None
+        disable_icon = 'disable_server'
     with c2:
-        if disable_cmd:
+            if disable_cmd:
             try:
-                p = Path(base_assets_dir) / 'disable_server.svg'
+                p = Path(base_assets_dir) / f"{disable_icon}.svg"
                 svg = p.read_text(encoding='utf-8') if p.exists() else ''
             except Exception:
                 svg = ''
