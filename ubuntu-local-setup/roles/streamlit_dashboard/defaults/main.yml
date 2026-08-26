@@ -13,6 +13,13 @@ streamlit_actions:
   - { name: "Stop SMB service",   icon: "stop",   command: "/usr/bin/systemctl stop smbd" }
   - { name: "Start SMB service",  icon: "start",  command: "/usr/bin/systemctl start smbd" }
   - { name: "Status SMB service", icon: "status", command: "/usr/bin/systemctl status smbd" }
+  - { name: "Unmask NMB service", icon: "unmask", command: "/usr/bin/systemctl unmask nmbd" }
+  - { name: "Mask NMB service",   icon: "mask",   command: "/usr/bin/systemctl mask nmbd" }
+  - { name: "Enable NMB service", icon: "enable", command: "/usr/bin/systemctl enable nmbd" }
+  - { name: "Disable NMB service",icon: "disable",command: "/usr/bin/systemctl disable nmbd" }
+  - { name: "Stop NMB service",   icon: "stop",   command: "/usr/bin/systemctl stop nmbd" }
+  - { name: "Start NMB service",  icon: "start",  command: "/usr/bin/systemctl start nmbd" }
+  - { name: "Status NMB service", icon: "status", command: "/usr/bin/systemctl status nmbd" }
 
 # Fallback for older usage: keep `streamlit_commands` supported but prefer `streamlit_actions`.
 streamlit_commands: []
