@@ -44,6 +44,7 @@
     owner: "{{ app_user }}"
     group: "{{ app_user }}"
     mode: '0644'
+  notify: Restart streamlit-dashboard
 
 - name: Create sudoers for devopsadmin to run defined commands without password
   ansible.builtin.copy:
@@ -58,6 +59,13 @@
     owner: root
     group: root
     mode: '0440'
+  when: streamlit_actions is defined and streamlit_actions | length > 0
+
+- name: Validate sudoers syntax
+  ansible.builtin.command:
+    cmd: visudo -cf /etc/sudoers.d/devopsadmin_streamlit
+  register: visudo_check
+  failed_when: visudo_check.rc != 0
   when: streamlit_actions is defined and streamlit_actions | length > 0
 
 - name: Deploy systemd service for Streamlit dashboard
