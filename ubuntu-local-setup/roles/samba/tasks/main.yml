@@ -98,7 +98,7 @@
 - name: List Samba share
   shell: echo {{ item.password }} | smbclient -L {{ ansible_facts['all_ipv4_addresses'][0] }} -U {{ item.name }}
   with_items: "{{ samba_users }}"
-  no_log: true
+  # no_log: true
   register: list_share
   ignore_errors: true
 
