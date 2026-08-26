@@ -49,7 +49,8 @@ if 'pending_action' not in st.session_state:
     st.session_state['pending_action'] = None
 
 log_file = "{{ log_file }}"
-enable_confirmation = {{ 'true' if enable_confirmation|default(true) else 'false' }}
+# Render Python booleans correctly
+enable_confirmation = {{ 'True' if enable_confirmation|default(true) else 'False' }}
 
 def append_log(entry):
     try:
