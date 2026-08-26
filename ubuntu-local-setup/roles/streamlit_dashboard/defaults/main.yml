@@ -1,6 +1,6 @@
 ---
 # Defaults for streamlit_dashboard role
-app_parent_dir: /opt/devopsadmin/application
+app_parent_dir: /home/devopsadmin/application
 app_user: devopsadmin
 venv_path: "{{ app_parent_dir }}/.venv"
 
