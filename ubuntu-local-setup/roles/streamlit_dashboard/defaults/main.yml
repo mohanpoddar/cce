@@ -3,14 +3,34 @@
 app_parent_dir: /opt/devopsadmin/application
 app_user: devopsadmin
 venv_path: "{{ app_parent_dir }}/.venv"
-streamlit_commands:
-    - /usr/bin/systemctl unmask smbd
-    - /usr/bin/systemctl mask smbd
-    - /usr/bin/systemctl enable smbd
-    - /usr/bin/systemctl disable smbd
-    - /usr/bin/systemctl stop smbd
-    - /usr/bin/systemctl start smbd
-    - /usr/bin/systemctl status smbd
+streamlit_actions:
+    - name: Unmask SMB service
+        icon: "unmask"
+        command: /usr/bin/systemctl unmask smbd
+    - name: Mask SMB service
+        icon: "mask"
+        command: /usr/bin/systemctl mask smbd
+    - name: Enable SMB service
+        icon: "enable"
+        command: /usr/bin/systemctl enable smbd
+    - name: Disable SMB service
+        icon: "disable"
+        command: /usr/bin/systemctl disable smbd
+    - name: Stop SMB service
+        icon: "stop"
+        command: /usr/bin/systemctl stop smbd
+    - name: Start SMB service
+        icon: "start"
+        command: /usr/bin/systemctl start smbd
+    - name: Status SMB service
+        icon: "status"
+        command: /usr/bin/systemctl status smbd
+# Fallback for older usage: keep `streamlit_commands` supported but prefer `streamlit_actions`.
+streamlit_commands: []
+
 streamlit_port: 8501
 streamlit_address: 0.0.0.0
 service_name: streamlit-dashboard
+enable_confirmation: true
+# Path where action runs are logged (app user will own this file)
+log_file: "{{ app_parent_dir }}/logs/actions.log"

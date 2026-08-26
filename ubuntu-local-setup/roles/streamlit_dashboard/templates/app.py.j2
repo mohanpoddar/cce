@@ -3,28 +3,179 @@ import subprocess
 import shlex
 
 st.set_page_config(page_title="Devopsadmin Dashboard", page_icon="📊")
-st.title("Devopsadmin Streamlit Dashboard")
-st.write("Click a button to run the corresponding command as `devopsadmin`. Output will be shown below.")
+st.markdown("""
+<style>
+:root{
+    --bg:#071018; --panel:#0f1720; --muted:#94a3b8; --accent:#0ea5ff; --card:#0b1220; --glass: rgba(255,255,255,0.02);
+}
+body { background: linear-gradient(180deg,#071018 0%, #041018 100%); }
+.dashboard { padding: 16px 8px; }
+.grid { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+.card { background: linear-gradient(180deg,var(--card), #08121a); border-radius:12px; padding:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
+.action-row{ display:flex; gap:12px; align-items:center; padding:10px; border-radius:10px; background: var(--glass); margin-bottom:10px; }
+.icon-wrap{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; }
+.title{ font-weight:700; font-size:16px; color:#e6eef8; }
+.subtitle{ color:var(--muted); font-size:13px; }
+.run { background: linear-gradient(90deg,var(--accent), #3db5ff); color: #042028; padding:8px 12px; border-radius:8px; border:none; font-weight:600; }
+.run:hover{ transform: translateY(-1px); }
+.output { background:#071722; border-radius:8px; padding:10px; color:#cfe9ff; font-family: monospace; white-space: pre-wrap; }
+.small { color:var(--muted); font-size:12px }
+</style>
+""", unsafe_allow_html=True)
 
-commands = [
+st.markdown("""
+<div style='display:flex;align-items:center;gap:12px'>
+    <h1 style='margin:0;color:#e6eef8'>Devopsadmin Dashboard</h1>
+    <div style='color:var(--muted);font-size:14px'> — Streamlined actions for operators</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("<div class='dashboard'>", unsafe_allow_html=True)
+
+# Build actions list from structured defaults if available, otherwise fall back to simple commands
+actions = []
+{% if streamlit_actions is defined and streamlit_actions|length > 0 %}
+{% for a in streamlit_actions %}
+actions.append({"name": "{{ a.name }}", "icon": "{{ a.icon }}", "command": "{{ a.command }}"})
+{% endfor %}
+{% elif streamlit_commands is defined and streamlit_commands|length > 0 %}
 {% for cmd in streamlit_commands %}
-    "{{ cmd }}",{% endfor %}
-]
+actions.append({"name": "{{ cmd.split()[-1] }}", "icon": "⚙️", "command": "{{ cmd }}"})
+{% endfor %}
+{% endif %}
 
-for cmd in commands:
-    cols = st.columns([4,1])
-    with cols[0]:
-        st.code(cmd)
-    with cols[1]:
-        # use a compact emoji button for affordance
-        if st.button("▶️", key=cmd):
-            try:
-                args = ["sudo"] + shlex.split(cmd)
-                result = subprocess.run(args, capture_output=True, text=True)
-                st.write("Return code: {}".format(result.returncode))
-                if result.stdout:
-                    st.text("Output:\n" + result.stdout)
-                if result.stderr:
-                    st.error("Error:\n" + result.stderr)
-            except Exception as e:
-                st.error(str(e))
+# Session state for pending action confirmation
+if 'pending_action' not in st.session_state:
+    st.session_state['pending_action'] = None
+
+log_file = "{{ log_file }}"
+enable_confirmation = {{ 'true' if enable_confirmation|default(true) else 'false' }}
+
+def append_log(entry):
+    try:
+        with open(log_file, 'a') as f:
+            f.write(entry + "\n")
+    except Exception as _:
+        pass
+
+for idx, action in enumerate(actions):
+    # choose an SVG based on action name keywords
+    svg = ''
+    name_lower = action['name'].lower()
+        if 'unmask' in name_lower or 'unmask' in action.get('name','').lower():
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <path d='M14.7 5.3a5 5 0 1 0 0 7.07' stroke='#7dd3fc' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+                    <path d='M9 14l6-6' stroke='#06b6d4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
+                </svg>
+                """
+        elif 'mask' in name_lower or 'mask' in action.get('name','').lower():
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <rect x='3' y='3' width='18' height='18' rx='3' stroke='#fb7185' stroke-width='1.2'/>
+                    <path d='M7 7l10 10' stroke='#f43f5e' stroke-width='1.6' stroke-linecap='round'/>
+                </svg>
+                """
+        elif 'enable' in name_lower:
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <path d='M10 14l2 2 5-7' stroke='#34d399' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+                </svg>
+                """
+        elif 'disable' in name_lower:
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <circle cx='12' cy='12' r='8' stroke='#f97316' stroke-width='1.2'/>
+                    <path d='M8 8l8 8' stroke='#fb923c' stroke-width='1.6' stroke-linecap='round'/>
+                </svg>
+                """
+        elif 'stop' in name_lower or 'stop' in action.get('name','').lower():
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <rect x='7' y='7' width='10' height='10' rx='2' fill='#fb7185'/>
+                </svg>
+                """
+        elif 'start' in name_lower or 'start' in action.get('name','').lower():
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <path d='M8 5v14l11-7z' fill='#60a5fa'/>
+                </svg>
+                """
+        elif 'status' in name_lower or 'status' in action.get('name','').lower():
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <circle cx='12' cy='12' r='9' stroke='#93c5fd' stroke-width='1.2'/>
+                    <path d='M12 8v4l2 2' stroke='#60a5fa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+                </svg>
+                """
+        else:
+                svg = """
+                <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                    <circle cx='12' cy='12' r='9' stroke='#93c5fd' stroke-width='1.2'/>
+                    <path d='M10 8l4 4-4 4' stroke='#60a5fa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
+                </svg>
+                """
+
+    with st.container():
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        cols = st.columns([0.12, 0.68, 0.2])
+        with cols[0]:
+            st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
+        with cols[1]:
+            st.markdown(f"<div class='title'>{action['name']}</div>")
+            st.markdown(f"<div class='subtitle'>{action['command']}</div>", unsafe_allow_html=True)
+        with cols[2]:
+            run_key = f"run_{idx}"
+            confirm_key = f"confirm_{idx}"
+            if st.button("Run", key=run_key):
+                st.session_state['pending_action'] = idx
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # If this action is pending, show confirmation and output area
+        if st.session_state.get('pending_action') == idx:
+            with st.expander("Action details and result", expanded=True):
+                if enable_confirmation:
+                    st.warning(f"Are you sure you want to run **{action['name']}**?")
+                    if st.button("Confirm", key=confirm_key):
+                        placeholder = st.empty()
+                        try:
+                            args = ["sudo"] + shlex.split(action['command'])
+                            result = subprocess.run(args, capture_output=True, text=True)
+                            out = result.stdout or ""
+                            err = result.stderr or ""
+                            code = result.returncode
+                            timestamp = __import__('datetime').datetime.utcnow().isoformat()
+                            log_entry = f"{timestamp} | {action['name']} | {action['command']} | return={code} | out={out.strip()} | err={err.strip()}"
+                            append_log(log_entry)
+                            placeholder.markdown(f"**Return code:** {code}")
+                            if out:
+                                placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
+                            if err:
+                                placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
+                        except Exception as e:
+                            st.error(str(e))
+                        finally:
+                            st.session_state['pending_action'] = None
+                else:
+                    # No confirmation flow
+                    placeholder = st.empty()
+                    try:
+                        args = ["sudo"] + shlex.split(action['command'])
+                        result = subprocess.run(args, capture_output=True, text=True)
+                        out = result.stdout or ""
+                        err = result.stderr or ""
+                        code = result.returncode
+                        timestamp = __import__('datetime').datetime.utcnow().isoformat()
+                        log_entry = f"{timestamp} | {action['name']} | {action['command']} | return={code} | out={out.strip()} | err={err.strip()}"
+                        append_log(log_entry)
+                        placeholder.markdown(f"**Return code:** {code}")
+                        if out:
+                            placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
+                        if err:
+                            placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
+                    except Exception as e:
+                        st.error(str(e))
+                    finally:
+                        st.session_state['pending_action'] = None
+

@@ -16,6 +16,15 @@
     mode: '0755'
     recurse: yes
 
+- name: Create logs directory for the application
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}/logs"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+    recurse: yes
+
 - name: Create Python virtualenv for application
   ansible.builtin.command:
     cmd: python3 -m venv "{{ venv_path }}"
