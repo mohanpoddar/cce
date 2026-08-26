@@ -25,6 +25,15 @@
     mode: '0755'
     recurse: yes
 
+- name: Copy dashboard icon assets
+  ansible.builtin.copy:
+    src: icons/
+    dest: "{{ app_parent_dir }}/assets/"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+    recurse: yes
+
 - name: Create Python virtualenv for application
   ansible.builtin.command:
     cmd: python3 -m venv "{{ venv_path }}"
