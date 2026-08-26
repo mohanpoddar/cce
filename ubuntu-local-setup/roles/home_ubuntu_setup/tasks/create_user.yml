@@ -28,8 +28,12 @@
   ansible.builtin.set_fact:
     smbd_systemctl_commands:
       - /usr/bin/systemctl unmask smbd
+      - /usr/bin/systemctl mask smbd
       - /usr/bin/systemctl enable smbd
+      - /usr/bin/systemctl disable smbd
+      - /usr/bin/systemctl stop smbd
       - /usr/bin/systemctl start smbd
+      - /usr/bin/systemctl status smbd
 
 - name: Create sudoers file for user cce to manage smbd without password
   ansible.builtin.copy:

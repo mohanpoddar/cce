@@ -12,7 +12,7 @@
 
 # # Add playbook roles
   roles:
-  # - home_ubuntu_setup
-  # # - onedrive_install
-  # - samba
+  - home_ubuntu_setup
+  # - onedrive_install
+  - samba
   - streamlit_dashboard

@@ -4,9 +4,13 @@ app_parent_dir: /opt/devopsadmin/application
 app_user: devopsadmin
 venv_path: "{{ app_parent_dir }}/.venv"
 streamlit_commands:
-  - /usr/bin/systemctl unmask smbd
-  - /usr/bin/systemctl enable smbd
-  - /usr/bin/systemctl start smbd
+    - /usr/bin/systemctl unmask smbd
+    - /usr/bin/systemctl mask smbd
+    - /usr/bin/systemctl enable smbd
+    - /usr/bin/systemctl disable smbd
+    - /usr/bin/systemctl stop smbd
+    - /usr/bin/systemctl start smbd
+    - /usr/bin/systemctl status smbd
 streamlit_port: 8501
 streamlit_address: 0.0.0.0
 service_name: streamlit-dashboard
