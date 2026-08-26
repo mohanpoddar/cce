@@ -24,6 +24,23 @@
     success_msg: "script_source_dir and script_dest_dir are present"
 
 # - name: sudo without password for devopsadmin user
+- name: Define SMBD systemctl commands
+  ansible.builtin.set_fact:
+    smbd_systemctl_commands:
+      - /usr/bin/systemctl unmask smbd
+      - /usr/bin/systemctl enable smbd
+      - /usr/bin/systemctl start smbd
+
+- name: Create sudoers file for user cce to manage smbd without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/cce_smbd
+    content: |
+      Cmnd_Alias SMBD_CMDS = {{ smbd_systemctl_commands | join(', ') }}
+      cce ALL=(ALL) NOPASSWD: SMBD_CMDS
+    owner: root
+    group: root
+    mode: '0440'
+
 - name: Create recursive directory for user cce
   ansible.builtin.file:
     path: "{{ script_dest_dir }}"
@@ -82,3 +99,4 @@
     owner: cce
     group: cce
     mode: 0755
+
