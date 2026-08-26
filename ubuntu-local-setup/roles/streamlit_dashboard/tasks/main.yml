@@ -1,0 +1,66 @@
+---
+- name: Ensure required APT packages are installed
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: yes
+
+- name: Create application parent directory
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+    recurse: yes
+
+- name: Create Python virtualenv for application
+  ansible.builtin.command:
+    cmd: python3 -m venv "{{ venv_path }}"
+  args:
+    creates: "{{ venv_path }}/bin/activate"
+
+- name: Install streamlit into virtualenv
+  ansible.builtin.pip:
+    name: streamlit
+    virtualenv: "{{ venv_path }}"
+    state: present
+    executable: "{{ venv_path }}/bin/pip"
+
+- name: Deploy Streamlit app
+  ansible.builtin.template:
+    src: app.py.j2
+    dest: "{{ app_parent_dir }}/app.py"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+
+- name: Create sudoers for devopsadmin to run defined commands without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/devopsadmin_streamlit
+    content: |
+      Cmnd_Alias STREAM_CMDS = {{ streamlit_commands | join(', ') }}
+      {{ app_user }} ALL=(ALL) NOPASSWD: STREAM_CMDS
+    owner: root
+    group: root
+    mode: '0440'
+
+- name: Deploy systemd service for Streamlit dashboard
+  ansible.builtin.template:
+    src: streamlit.service.j2
+    dest: /etc/systemd/system/{{ service_name }}.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  ansible.builtin.command:
+    cmd: systemctl daemon-reload
+
+- name: Enable and start Streamlit dashboard service
+  ansible.builtin.systemd:
+    name: "{{ service_name }}.service"
+    enabled: yes
+    state: started

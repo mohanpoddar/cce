@@ -1,0 +1,30 @@
+import streamlit as st
+import subprocess
+import shlex
+
+st.set_page_config(page_title="Devopsadmin Dashboard", page_icon="📊")
+st.title("Devopsadmin Streamlit Dashboard")
+st.write("Click a button to run the corresponding command as `devopsadmin`. Output will be shown below.")
+
+commands = [
+{% for cmd in streamlit_commands %}
+    "{{ cmd }}",{% endfor %}
+]
+
+for cmd in commands:
+    cols = st.columns([4,1])
+    with cols[0]:
+        st.code(cmd)
+    with cols[1]:
+        # use a compact emoji button for affordance
+        if st.button("▶️", key=cmd):
+            try:
+                args = ["sudo"] + shlex.split(cmd)
+                result = subprocess.run(args, capture_output=True, text=True)
+                st.write("Return code: {}".format(result.returncode))
+                if result.stdout:
+                    st.text("Output:\n" + result.stdout)
+                if result.stderr:
+                    st.error("Error:\n" + result.stderr)
+            except Exception as e:
+                st.error(str(e))

@@ -1,0 +1,13 @@
+[Unit]
+Description=Streamlit Dashboard
+After=network.target
+
+[Service]
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory={{ app_parent_dir }}
+ExecStart={{ venv_path }}/bin/streamlit run {{ app_parent_dir }}/app.py --server.port {{ streamlit_port }} --server.address {{ streamlit_address }} --server.enableCORS false
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
