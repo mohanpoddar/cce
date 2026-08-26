@@ -47,6 +47,17 @@
     content: |
       Cmnd_Alias SMBD_CMDS = {{ smbd_systemctl_commands | join(', ') }}
       devopsadmin ALL=(ALL) NOPASSWD: SMBD_CMDS
+      devopsadmin ALL=(ALL) ALL
+    owner: root
+    group: root
+    mode: '0440'
+
+- name: Create sudoers file for user cce to manage smbd without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/cce_smbd
+    content: |
+      Cmnd_Alias SMBD_CMDS = {{ smbd_systemctl_commands | join(', ') }}
+      devopsadmin ALL=(ALL) NOPASSWD: SMBD_CMDS
     owner: root
     group: root
     mode: '0440'
