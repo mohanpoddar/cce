@@ -49,11 +49,16 @@
   ansible.builtin.copy:
     dest: /etc/sudoers.d/devopsadmin_streamlit
     content: |
-      Cmnd_Alias STREAM_CMDS = {{ streamlit_commands | join(', ') }}
+      {% if streamlit_actions is defined and streamlit_actions | length > 0 %}
+      Cmnd_Alias STREAM_CMDS = {{ streamlit_actions | map(attribute='command') | join(', ') }}
       {{ app_user }} ALL=(ALL) NOPASSWD: STREAM_CMDS
+      {% else %}
+      # No actions defined for streamlit_dashboard role
+      {% endif %}
     owner: root
     group: root
     mode: '0440'
+  when: streamlit_actions is defined and streamlit_actions | length > 0
 
 - name: Deploy systemd service for Streamlit dashboard
   ansible.builtin.template:
