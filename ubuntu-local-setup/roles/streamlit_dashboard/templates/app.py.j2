@@ -6,22 +6,14 @@ from pathlib import Path
 st.set_page_config(page_title="Devopsadmin Dashboard", page_icon="📊")
 st.markdown("""
 <style>
-:root{
-    --bg:#071018; --panel:#0f1720; --muted:#94a3b8; --accent:#0ea5ff; --card:#0b1220; --glass: rgba(255,255,255,0.02);
-}
+:root{ --bg:#071018; --panel:#0f1720; --muted:#94a3b8; --accent:#0ea5ff; --card:#0b1220; --glass: rgba(255,255,255,0.02); }
 body { background: linear-gradient(180deg,#071018 0%, #041018 100%); }
 .dashboard { padding: 16px 8px; }
-.grid { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
 .card { background: linear-gradient(180deg,var(--card), #08121a); border-radius:12px; padding:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
-.action-row{ display:flex; gap:12px; align-items:center; padding:10px; border-radius:10px; background: var(--glass); margin-bottom:10px; }
 .icon-wrap{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; }
 .title{ font-weight:700; font-size:16px; color:#e6eef8; }
 .subtitle{ color:var(--muted); font-size:13px; }
-.run { background: linear-gradient(90deg,var(--accent), #3db5ff); color: #042028; padding:8px 12px; border-radius:8px; border:none; font-weight:600; }
-.run:hover{ transform: translateY(-1px); }
-.output { background:#071722; border-radius:8px; padding:10px; color:#cfe9ff; font-family: monospace; white-space: pre-wrap; }
-.small { color:var(--muted); font-size:12px }
-.output { max-height: 480px; overflow: auto; }
+.output { background:#071722; border-radius:8px; padding:10px; color:#cfe9ff; font-family: monospace; white-space: pre-wrap; max-height:520px; overflow:auto }
 </style>
 """, unsafe_allow_html=True)
 
@@ -34,360 +26,194 @@ st.markdown("""
 
 st.markdown("<div class='dashboard'>", unsafe_allow_html=True)
 
-# Build actions list from structured defaults if available, otherwise fall back to simple commands
+# Build actions list
 actions = []
 {% if streamlit_actions is defined and streamlit_actions|length > 0 %}
 {% for a in streamlit_actions %}
 actions.append({"name": "{{ a.name }}", "icon": "{{ a.icon }}", "command": "{{ a.command }}"})
 {% endfor %}
-{% elif streamlit_commands is defined and streamlit_commands|length > 0 %}
-{% for cmd in streamlit_commands %}
-actions.append({"name": "{{ cmd.split()[-1] }}", "icon": "⚙️", "command": "{{ cmd }}"})
-{% endfor %}
 {% endif %}
 
-# Session state for pending action confirmation
-if 'pending_action' not in st.session_state:
-    st.session_state['pending_action'] = None
-
 log_file = "{{ log_file }}"
-# Render Python booleans correctly
-enable_confirmation = {{ 'True' if enable_confirmation|default(true) else 'False' }}
 base_assets_dir = "{{ app_parent_dir }}/assets"
 app_parent_dir = "{{ app_parent_dir }}"
+
+if 'pending_action' not in st.session_state:
+    st.session_state['pending_action'] = None
 
 def append_log(entry):
     try:
         with open(log_file, 'a') as f:
             f.write(entry + "\n")
-    except Exception as _:
+    except Exception:
         pass
 
-# Find compound actions (enable/disable server) first so we can render them side-by-side
-enable_idx = None
-disable_idx = None
-for i, a in enumerate(actions):
-    if a.get('icon') == 'enable_server':
-        enable_idx = i
-    if a.get('icon') == 'disable_server':
-        disable_idx = i
+def execute_and_display(name, command):
+    placeholder = st.empty()
+    try:
+        args = ['sudo'] + shlex.split(command)
+        result = subprocess.run(args, capture_output=True, text=True)
+        out = result.stdout or ''
+        err = result.stderr or ''
+        code = result.returncode
+        timestamp = __import__('datetime').datetime.utcnow().isoformat()
+        log_entry = f"{timestamp} | {name} | {command} | return={code} | out={out.strip()} | err={err.strip()}"
+        append_log(log_entry)
+        placeholder.markdown(f"**Return code:** {code}")
+        if out:
+            placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
+        if err:
+            placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(str(e))
 
-handled = set()
-if enable_idx is not None and disable_idx is not None:
-    handled.update({enable_idx, disable_idx})
-    # Build two-column compound panel for Enable/Disable Server commands
-    # Find compound action indices
-    enable_idx = None
-    disable_idx = None
-    for i, a in enumerate(actions):
-        if a.get('icon') == 'enable_server':
-            enable_idx = i
-        if a.get('icon') == 'disable_server':
-            disable_idx = i
+# Helpers to find action indices by exact command
+action_index_by_command = {a['command']: i for i,a in enumerate(actions)}
 
-    handled = set()
-    if enable_idx is not None and disable_idx is not None:
-        handled.update({enable_idx, disable_idx})
-
-        # Decide which action indices belong to left (enable flow) and right (disable flow)
-        left_indices = []
-        right_indices = []
-        for i, a in enumerate(actions):
-            cmd = a.get('command','')
-            if '/systemctl' in cmd and ('smbd' in cmd or 'nmbd' in cmd):
-                if any(k in cmd for k in ['unmask','enable','start','status']) and i not in (enable_idx, disable_idx):
-                    left_indices.append(i)
-                if any(k in cmd for k in ['mask','disable','stop','status']) and i not in (enable_idx, disable_idx):
-                    right_indices.append(i)
-
-        # Render two-column layout with a thicker divider and spacing
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        left_col, divider_col, right_col = st.columns([0.48, 0.02, 0.48])
-
-        # divider
-        with divider_col:
-            st.markdown("<div style='width:100%; height:100%; display:flex; align-items:stretch;'><div style=\"width:3px; background: rgba(255,255,255,0.08); margin:0 auto; height:100%; border-radius:2px;\"></div></div>", unsafe_allow_html=True)
-
-        # Helper to render an action row and inline confirmation/output
-        def render_action_row(a, idx):
-            svg_c = ''
-            try:
-                p = Path(base_assets_dir) / f"{a.get('icon')}.svg"
-                if p.exists():
-                    svg_c = p.read_text(encoding='utf-8')
-            except Exception:
-                svg_c = ''
-
-            cols = st.columns([0.12, 0.68, 0.2])
-            with cols[0]:
-                if svg_c:
-                    st.markdown(f"<div class='icon-wrap'>{svg_c}</div>", unsafe_allow_html=True)
-                else:
-                    st.markdown("<div class='icon-wrap'></div>", unsafe_allow_html=True)
-            with cols[1]:
-                st.markdown(f"<div class='title'>{a.get('name')}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='subtitle'>{a.get('command')}</div>", unsafe_allow_html=True)
-            with cols[2]:
-                if st.button('Run', key=f'run_{idx}'):
-                    st.session_state['pending_action'] = idx
-
-            # inline confirmation and output immediately below the row
-            if st.session_state.get('pending_action') == idx:
-                if enable_confirmation:
-                    st.warning(f"Are you sure you want to run **{a.get('name')}**?")
-                    if st.button('Confirm', key=f'confirm_{idx}'):
-                        placeholder = st.empty()
-                        try:
-                            args = ['sudo'] + shlex.split(a.get('command'))
-                            result = subprocess.run(args, capture_output=True, text=True)
-                            out = result.stdout or ''
-                            err = result.stderr or ''
-                            code = result.returncode
-                            timestamp = __import__('datetime').datetime.utcnow().isoformat()
-                            log_entry = f"{timestamp} | {a.get('name')} | {a.get('command')} | return={code} | out={out.strip()} | err={err.strip()}"
-                            append_log(log_entry)
-                            placeholder.markdown(f"**Return code:** {code}")
-                            if out:
-                                placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                            if err:
-                                placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                        except Exception as e:
-                            st.error(str(e))
-                        finally:
-                            st.session_state['pending_action'] = None
-                else:
-                    placeholder = st.empty()
-                    try:
-                        args = ['sudo'] + shlex.split(a.get('command'))
-                        result = subprocess.run(args, capture_output=True, text=True)
-                        out = result.stdout or ''
-                        err = result.stderr or ''
-                        code = result.returncode
-                        timestamp = __import__('datetime').datetime.utcnow().isoformat()
-                        log_entry = f"{timestamp} | {a.get('name')} | {a.get('command')} | return={code} | out={out.strip()} | err={err.strip()}"
-                        append_log(log_entry)
-                        placeholder.markdown(f"**Return code:** {code}")
-                        if out:
-                            placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                        if err:
-                            placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(str(e))
-                    finally:
-                        st.session_state['pending_action'] = None
-
-        # Left column: enable flow
-        with left_col:
-            st.markdown("<div style='padding-bottom:6px'><strong style='color:#e6eef8'>Enable Flow</strong></div>", unsafe_allow_html=True)
-            for idx in left_indices:
-                render_action_row(actions[idx], idx)
-
-        # Right column: disable flow
-        with right_col:
-            st.markdown("<div style='padding-bottom:6px'><strong style='color:#e6eef8'>Disable Flow</strong></div>", unsafe_allow_html=True)
-            for idx in right_indices:
-                render_action_row(actions[idx], idx)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Render remaining actions not in the two-column compound panel
-    for idx, action in enumerate(actions):
-        if idx in handled:
-            continue
-        # load SVG content from assets directory and embed inline (role-controlled)
-        svg_content = ""
-        try:
-            svg_path = Path(base_assets_dir) / f"{action['icon']}.svg"
-            if svg_path.exists():
-                svg_content = svg_path.read_text(encoding='utf-8')
-        except Exception:
-            svg_content = ""
-
-        with st.container():
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            cols = st.columns([0.12, 0.68, 0.2])
-            with cols[0]:
-                st.markdown(f"<div class='icon-wrap'>{svg_content}</div>", unsafe_allow_html=True)
-            with cols[1]:
-                st.markdown(f"<div class='title'>{action['name']}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='subtitle'>{action['command']}</div>", unsafe_allow_html=True)
-            with cols[2]:
-                if st.button('Run', key=f'run_{idx}'):
-                    st.session_state['pending_action'] = idx
-
-            # inline confirmation and output
-            if st.session_state.get('pending_action') == idx:
-                if enable_confirmation:
-                    st.warning(f"Are you sure you want to run **{action['name']}**?")
-                    if st.button('Confirm', key=f'confirm_{idx}'):
-                        placeholder = st.empty()
-                        try:
-                            args = ['sudo'] + shlex.split(action.get('command'))
-                            result = subprocess.run(args, capture_output=True, text=True)
-                            out = result.stdout or ''
-                            err = result.stderr or ''
-                            code = result.returncode
-                            timestamp = __import__('datetime').datetime.utcnow().isoformat()
-                            log_entry = f"{timestamp} | {action.get('name')} | {action.get('command')} | return={code} | out={out.strip()} | err={err.strip()}"
-                            append_log(log_entry)
-                            placeholder.markdown(f"**Return code:** {code}")
-                            if out:
-                                placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                            if err:
-                                placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                        except Exception as e:
-                            st.error(str(e))
-                        finally:
-                            st.session_state['pending_action'] = None
-                else:
-                    placeholder = st.empty()
-                    try:
-                        args = ['sudo'] + shlex.split(action.get('command'))
-                        result = subprocess.run(args, capture_output=True, text=True)
-                        out = result.stdout or ''
-                        err = result.stderr or ''
-                        code = result.returncode
-                        timestamp = __import__('datetime').datetime.utcnow().isoformat()
-                        log_entry = f"{timestamp} | {action.get('name')} | {action.get('command')} | return={code} | out={out.strip()} | err={err.strip()}"
-                        append_log(log_entry)
-                        placeholder.markdown(f"**Return code:** {code}")
-                        if out:
-                            placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                        if err:
-                            placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(str(e))
-                    finally:
-                        st.session_state['pending_action'] = None
-
+# Primary Enable/Disable tiles (top)
+if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/disable_server.sh' in [a['command'] for a in actions]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    left, right = st.columns([0.5, 0.5])
-    # left: Enable Server
-    with left:
-        try:
-            svg_e = Path(app_parent_dir) / 'assets' / f"{actions[enable_idx]['icon']}.svg"
-            svg_e_content = svg_e.read_text(encoding='utf-8') if svg_e.exists() else ''
-        except Exception:
-            svg_e_content = ''
-        if svg_e_content:
-            st.markdown(f"<div class='icon-wrap'>{svg_e_content}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='title'>{actions[enable_idx]['name']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='subtitle'>{actions[enable_idx]['command']}</div>", unsafe_allow_html=True)
-        if st.button('Run', key=f'run_compound_enable'):
-            st.session_state['pending_action'] = enable_idx
-    # right: Disable Server with vertical divider styling
-    with right:
-        st.markdown("<div style='border-left:1px solid rgba(255,255,255,0.06); padding-left:12px'>", unsafe_allow_html=True)
-        try:
-            svg_d = Path(app_parent_dir) / 'assets' / f"{actions[disable_idx]['icon']}.svg"
-            svg_d_content = svg_d.read_text(encoding='utf-8') if svg_d.exists() else ''
-        except Exception:
-            svg_d_content = ''
-        if svg_d_content:
-            st.markdown(f"<div class='icon-wrap'>{svg_d_content}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='title'>{actions[disable_idx]['name']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='subtitle'>{actions[disable_idx]['command']}</div>", unsafe_allow_html=True)
-        if st.button('Run', key=f'run_compound_disable'):
-            st.session_state['pending_action'] = disable_idx
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Show script contents below in two columns with divider
-    c1, c2 = st.columns([0.5, 0.5])
+    c1, c2 = st.columns([0.5,0.5])
+    # Enable primary
+    try:
+        enable_cmd = next((a['command'] for a in actions if a['icon']=='enable_server'), None)
+    except Exception:
+        enable_cmd = None
     with c1:
-        st.markdown("**Enable Server script**")
-        if enable_script:
-            st.code(enable_script, language='bash')
-        else:
-            st.write("(script not found)")
-    with c2:
-        st.markdown("**Disable Server script**")
-        if disable_script:
-            st.code(disable_script, language='bash')
-        else:
-            st.write("(script not found)")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Render remaining actions
-for idx, action in enumerate(actions):
-    if idx in handled:
-        continue
-    # load SVG content from assets directory and embed inline (role-controlled)
-    svg_content = ""
-    try:
-        svg_path = Path(base_assets_dir) / f"{action['icon']}.svg"
-        if svg_path.exists():
-            svg_content = svg_path.read_text(encoding='utf-8')
-    except Exception:
-        svg_content = ""
-
-    with st.container():
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        cols = st.columns([0.12, 0.68, 0.2])
-        with cols[0]:
-            st.markdown(f"<div class='icon-wrap'>{svg_content}</div>", unsafe_allow_html=True)
-        with cols[1]:
-            st.markdown(f"<div class='title'>{action['name']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='subtitle'>{action['command']}</div>", unsafe_allow_html=True)
-        with cols[2]:
-            run_key = f"run_{idx}"
-            confirm_key = f"confirm_{idx}"
-            if st.button("Run", key=run_key):
-                st.session_state['pending_action'] = idx
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# Handle pending action (confirmation + execution) for any action
-pending = st.session_state.get('pending_action')
-if pending is not None:
-    try:
-        action = actions[pending]
-    except Exception:
-        action = None
-
-    if action:
-        with st.expander("Action details and result", expanded=True):
-            if enable_confirmation:
-                st.warning(f"Are you sure you want to run **{action['name']}**?")
-                if st.button("Confirm", key=f"confirm_{pending}"):
-                    placeholder = st.empty()
-                    try:
-                        args = ["sudo"] + shlex.split(action['command'])
-                        result = subprocess.run(args, capture_output=True, text=True)
-                        out = result.stdout or ""
-                        err = result.stderr or ""
-                        code = result.returncode
-                        timestamp = __import__('datetime').datetime.utcnow().isoformat()
-                        log_entry = f"{timestamp} | {action['name']} | {action['command']} | return={code} | out={out.strip()} | err={err.strip()}"
-                        append_log(log_entry)
-                        placeholder.markdown(f"**Return code:** {code}")
-                        if out:
-                            placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                        if err:
-                            placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(str(e))
-                    finally:
-                        st.session_state['pending_action'] = None
-            else:
-                # No confirmation flow
-                placeholder = st.empty()
-                try:
-                    args = ["sudo"] + shlex.split(action['command'])
-                    result = subprocess.run(args, capture_output=True, text=True)
-                    out = result.stdout or ""
-                    err = result.stderr or ""
-                    code = result.returncode
-                    timestamp = __import__('datetime').datetime.utcnow().isoformat()
-                    log_entry = f"{timestamp} | {action['name']} | {action['command']} | return={code} | out={out.strip()} | err={err.strip()}"
-                    append_log(log_entry)
-                    placeholder.markdown(f"**Return code:** {code}")
-                    if out:
-                        placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                    if err:
-                        placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(str(e))
-                finally:
+        if enable_cmd:
+            try:
+                p = Path(base_assets_dir) / 'enable_server.svg'
+                svg = p.read_text(encoding='utf-8') if p.exists() else ''
+            except Exception:
+                svg = ''
+            if svg:
+                st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='title'>Enable Server</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='subtitle'>{enable_cmd}</div>", unsafe_allow_html=True)
+            if st.button('Run', key='run_primary_enable'):
+                st.session_state['pending_action'] = 'primary_enable'
+            if st.session_state.get('pending_action') == 'primary_enable':
+                st.warning('Are you sure you want to run Enable Server?')
+                if st.button('Confirm', key='confirm_primary_enable'):
+                    execute_and_display('Enable Server', enable_cmd)
                     st.session_state['pending_action'] = None
 
+    # Disable primary
+    try:
+        disable_cmd = next((a['command'] for a in actions if a['icon']=='disable_server'), None)
+    except Exception:
+        disable_cmd = None
+    with c2:
+        if disable_cmd:
+            try:
+                p = Path(base_assets_dir) / 'disable_server.svg'
+                svg = p.read_text(encoding='utf-8') if p.exists() else ''
+            except Exception:
+                svg = ''
+            if svg:
+                st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='title'>Disable Server</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='subtitle'>{disable_cmd}</div>", unsafe_allow_html=True)
+            if st.button('Run', key='run_primary_disable'):
+                st.session_state['pending_action'] = 'primary_disable'
+            if st.session_state.get('pending_action') == 'primary_disable':
+                st.warning('Are you sure you want to run Disable Server?')
+                if st.button('Confirm', key='confirm_primary_disable'):
+                    execute_and_display('Disable Server', disable_cmd)
+                    st.session_state['pending_action'] = None
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Two-column command lists
+left_ops = ['unmask','enable','start','status']
+right_ops = ['mask','disable','stop','status']
+services = ['smbd','nmbd']
+
+st.markdown("<div class='card'>", unsafe_allow_html=True)
+left_col, divider_col, right_col = st.columns([0.48, 0.02, 0.48])
+
+with divider_col:
+    st.markdown("<div style='width:3px; background: rgba(255,255,255,0.08); height:100%; margin:0 auto; border-radius:3px'></div>", unsafe_allow_html=True)
+
+def render_row_for(op, svc, side):
+    cmd = f"/usr/bin/systemctl {op} {svc}"
+    action_idx = action_index_by_command.get(cmd)
+    name = f"{op.capitalize()} {svc}"
+    icon = 'status'
+    if action_idx is not None:
+        action = actions[action_idx]
+        name = action.get('name')
+        icon = action.get('icon')
+    svg = ''
+    try:
+        p = Path(base_assets_dir) / f"{icon}.svg"
+        svg = p.read_text(encoding='utf-8') if p.exists() else ''
+    except Exception:
+        svg = ''
+    cols = st.columns([0.12, 0.68, 0.2])
+    with cols[0]:
+        if svg:
+            st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='icon-wrap'></div>", unsafe_allow_html=True)
+    with cols[1]:
+        st.markdown(f"<div class='title'>{name}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='subtitle'>{cmd}</div>", unsafe_allow_html=True)
+    key = f"run_{svc}_{op}_{side}"
+    confirm = f"confirm_{svc}_{op}_{side}"
+    with cols[2]:
+        if st.button('Run', key=key):
+            st.session_state['pending_action'] = key
+    if st.session_state.get('pending_action') == key:
+        st.warning(f"Are you sure you want to run **{name}**?")
+        if st.button('Confirm', key=confirm):
+            execute_and_display(name, cmd)
+            st.session_state['pending_action'] = None
+
+with left_col:
+    st.markdown("<strong style='color:#e6eef8'>Enable Flow</strong>", unsafe_allow_html=True)
+    for svc in services:
+        for op in left_ops:
+            render_row_for(op, svc, 'L')
+
+with right_col:
+    st.markdown("<strong style='color:#e6eef8'>Disable Flow</strong>", unsafe_allow_html=True)
+    for svc in services:
+        for op in right_ops:
+            render_row_for(op, svc, 'R')
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Render any other actions that are not standard systemctl ones
+systemctl_cmds = set(f"/usr/bin/systemctl {op} {svc}" for svc in services for op in (left_ops+right_ops))
+for i,a in enumerate(actions):
+    if a['command'] in systemctl_cmds or a.get('icon') in ('enable_server','disable_server'):
+        continue
+    # render as normal row
+    cols = st.columns([0.12, 0.68, 0.2])
+    svg = ''
+    try:
+        p = Path(base_assets_dir) / f"{a.get('icon')}.svg"
+        svg = p.read_text(encoding='utf-8') if p.exists() else ''
+    except Exception:
+        svg = ''
+    with cols[0]:
+        if svg:
+            st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='icon-wrap'></div>", unsafe_allow_html=True)
+    with cols[1]:
+        st.markdown(f"<div class='title'>{a.get('name')}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='subtitle'>{a.get('command')}</div>", unsafe_allow_html=True)
+    run_key = f"run_other_{i}"
+    confirm_key = f"confirm_other_{i}"
+    with cols[2]:
+        if st.button('Run', key=run_key):
+            st.session_state['pending_action'] = run_key
+    if st.session_state.get('pending_action') == run_key:
+        st.warning(f"Are you sure you want to run **{a.get('name')}**?")
+        if st.button('Confirm', key=confirm_key):
+            execute_and_display(a.get('name'), a.get('command'))
+            st.session_state['pending_action'] = None
+
+st.markdown('</div>', unsafe_allow_html=True)
