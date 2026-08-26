@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVICES=(smbd nmbd)
+
+log() {
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"
+}
+
+# Stop services
+for s in "${SERVICES[@]}"; do
+  log "stopping $s"
+  systemctl stop "$s" || log "failed to stop $s"
+done
+
+# Disable services
+for s in "${SERVICES[@]}"; do
+  log "disabling $s"
+  systemctl disable "$s" || log "failed to disable $s"
+done
+
+# Mask services
+for s in "${SERVICES[@]}"; do
+  log "masking $s"
+  systemctl mask "$s" || log "failed to mask $s"
+done
+
+# Show status
+for s in "${SERVICES[@]}"; do
+  log "status $s"
+  systemctl status "$s" --no-pager || true
+done
+
+log "disable_server completed"

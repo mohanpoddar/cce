@@ -21,6 +21,10 @@ streamlit_actions:
   - { name: "Start NMB service",  icon: "start",  command: "/usr/bin/systemctl start nmbd" }
   - { name: "Status NMB service", icon: "status", command: "/usr/bin/systemctl status nmbd" }
 
+# Compound server actions that run multiple commands via scripts
+  - { name: "Enable Server", icon: "enable_server", command: "{{ app_parent_dir }}/scripts/enable_server.sh" }
+  - { name: "Disable Server", icon: "disable_server", command: "{{ app_parent_dir }}/scripts/disable_server.sh" }
+
 # Fallback for older usage: keep `streamlit_commands` supported but prefer `streamlit_actions`.
 streamlit_commands: []
 
@@ -30,3 +34,8 @@ service_name: streamlit-dashboard
 enable_confirmation: true
 # Path where action runs are logged (app user will own this file)
 log_file: "{{ app_parent_dir }}/logs/actions.log"
+
+# Host/user used by the verification step inside the enable_server script.
+# By default we use the first IPv4 address discovered on the host.
+smb_verify_host: "{{ ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1') }}"
+smb_verify_user: "cce"

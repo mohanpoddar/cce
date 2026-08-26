@@ -50,6 +50,30 @@
   args:
     creates: "{{ venv_path }}/bin/activate"
 
+- name: Ensure scripts directory exists
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}/scripts"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy enable_server script
+  ansible.builtin.template:
+    src: enable_server.sh.j2
+    dest: "{{ app_parent_dir }}/scripts/enable_server.sh"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy disable_server script
+  ansible.builtin.template:
+    src: disable_server.sh.j2
+    dest: "{{ app_parent_dir }}/scripts/disable_server.sh"
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Install streamlit into virtualenv
   ansible.builtin.pip:
     name: streamlit

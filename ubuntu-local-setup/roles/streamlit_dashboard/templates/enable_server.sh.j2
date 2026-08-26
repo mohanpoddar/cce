@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVICES=(smbd nmbd)
+
+log() {
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"
+}
+
+# Unmask services
+for s in "${SERVICES[@]}"; do
+  log "unmasking $s"
+  systemctl unmask "$s" || { log "failed to unmask $s"; exit 2; }
+done
+
+# Enable services
+for s in "${SERVICES[@]}"; do
+  log "enabling $s"
+  systemctl enable "$s" || { log "failed to enable $s"; exit 3; }
+done
+
+# Start services if enabled and not already active
+for s in "${SERVICES[@]}"; do
+  if systemctl is-enabled --quiet "$s"; then
+    if ! systemctl is-active --quiet "$s"; then
+      log "starting $s"
+      systemctl start "$s" || { log "failed to start $s"; exit 4; }
+    else
+      log "$s already active"
+    fi
+  else
+    log "$s not enabled; skipping start"
+  fi
+done
+
+# Show status for debugging
+for s in "${SERVICES[@]}"; do
+  log "status $s"
+  systemctl status "$s" --no-pager || true
+done
+
+# Verify Samba reachability using smbclient; configured at template render time
+VERIFY_HOST={{ smb_verify_host | default(ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1')) }}
+VERIFY_USER={{ smb_verify_user | default('cce') }}
+
+log "verifying samba with smbclient against $VERIFY_HOST"
+echo ${VERIFY_USER} | smbclient -L ${VERIFY_HOST} -U ${VERIFY_USER} || { log "smbclient verification failed"; exit 5; }
+
+log "enable_server completed"
