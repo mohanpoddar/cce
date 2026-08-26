@@ -25,14 +25,24 @@
     mode: '0755'
     recurse: yes
 
-- name: Copy dashboard icon assets
+- name: Ensure assets directory exists
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}/assets"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+
+- name: Copy dashboard icon assets individually
+  vars:
+    icon_files: "{{ lookup('ansible.builtin.fileglob', role_path + '/files/icons/*', wantlist=True) | map('basename') | list }}"
   ansible.builtin.copy:
-    src: icons/
-    dest: "{{ app_parent_dir }}/assets/"
+    src: "icons/{{ item }}"
+    dest: "{{ app_parent_dir }}/assets/{{ item }}"
     owner: "{{ app_user }}"
     group: "{{ app_user }}"
     mode: '0644'
-    recurse: yes
+  loop: "{{ icon_files }}"
 
 - name: Create Python virtualenv for application
   ansible.builtin.command:
