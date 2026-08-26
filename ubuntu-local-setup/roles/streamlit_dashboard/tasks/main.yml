@@ -25,7 +25,6 @@
 - name: Install streamlit into virtualenv
   ansible.builtin.pip:
     name: streamlit
-    virtualenv: "{{ venv_path }}"
     state: present
     executable: "{{ venv_path }}/bin/pip"
 
