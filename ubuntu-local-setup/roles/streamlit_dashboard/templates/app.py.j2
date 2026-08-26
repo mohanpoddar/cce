@@ -62,59 +62,22 @@ for idx, action in enumerate(actions):
     # choose an SVG based on action name keywords
     svg = ''
     name_lower = action['name'].lower()
-    if 'unmask' in name_lower or 'unmask' in action.get('name','').lower():
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <path d='M14.7 5.3a5 5 0 1 0 0 7.07' stroke='#7dd3fc' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
-          <path d='M9 14l6-6' stroke='#06b6d4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/>
-        </svg>
-        """
-    elif 'mask' in name_lower or 'mask' in action.get('name','').lower():
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <rect x='3' y='3' width='18' height='18' rx='3' stroke='#fb7185' stroke-width='1.2'/>
-          <path d='M7 7l10 10' stroke='#f43f5e' stroke-width='1.6' stroke-linecap='round'/>
-        </svg>
-        """
-    elif 'enable' in name_lower:
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <path d='M10 14l2 2 5-7' stroke='#34d399' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
-        </svg>
-        """
-    elif 'disable' in name_lower:
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <circle cx='12' cy='12' r='8' stroke='#f97316' stroke-width='1.2'/>
-          <path d='M8 8l8 8' stroke='#fb923c' stroke-width='1.6' stroke-linecap='round'/>
-        </svg>
-        """
-    elif 'stop' in name_lower or 'stop' in action.get('name','').lower():
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <rect x='7' y='7' width='10' height='10' rx='2' fill='#fb7185'/>
-        </svg>
-        """
-    elif 'start' in name_lower or 'start' in action.get('name','').lower():
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <path d='M8 5v14l11-7z' fill='#60a5fa'/>
-        </svg>
-        """
-    elif 'status' in name_lower or 'status' in action.get('name','').lower():
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <circle cx='12' cy='12' r='9' stroke='#93c5fd' stroke-width='1.2'/>
-          <path d='M12 8v4l2 2' stroke='#60a5fa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
-        </svg>
-        """
-    else:
-        svg = """
-        <svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
-          <circle cx='12' cy='12' r='9' stroke='#93c5fd' stroke-width='1.2'/>
-          <path d='M10 8l4 4-4 4' stroke='#60a5fa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/>
-        </svg>
-        """
+        if 'unmask' in name_lower or 'unmask' in action.get('name','').lower():
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M14.7 5.3a5 5 0 1 0 0 7.07' stroke='#7dd3fc' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><path d='M9 14l6-6' stroke='#06b6d4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+        elif 'mask' in name_lower or 'mask' in action.get('name','').lower():
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='3' y='3' width='18' height='18' rx='3' stroke='#fb7185' stroke-width='1.2'/><path d='M7 7l10 10' stroke='#f43f5e' stroke-width='1.6' stroke-linecap='round'/></svg>"
+        elif 'enable' in name_lower:
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M10 14l2 2 5-7' stroke='#34d399' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+        elif 'disable' in name_lower:
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='8' stroke='#f97316' stroke-width='1.2'/><path d='M8 8l8 8' stroke='#fb923c' stroke-width='1.6' stroke-linecap='round'/></svg>"
+        elif 'stop' in name_lower or 'stop' in action.get('name','').lower():
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect x='7' y='7' width='10' height='10' rx='2' fill='#fb7185'/></svg>"
+        elif 'start' in name_lower or 'start' in action.get('name','').lower():
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M8 5v14l11-7z' fill='#60a5fa'/></svg>"
+        elif 'status' in name_lower or 'status' in action.get('name','').lower():
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='9' stroke='#93c5fd' stroke-width='1.2'/><path d='M12 8v4l2 2' stroke='#60a5fa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+        else:
+                svg = "<svg width='36' height='36' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='12' cy='12' r='9' stroke='#93c5fd' stroke-width='1.2'/><path d='M10 8l4 4-4 4' stroke='#60a5fa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>"
 
     with st.container():
         st.markdown("<div class='card'>", unsafe_allow_html=True)
