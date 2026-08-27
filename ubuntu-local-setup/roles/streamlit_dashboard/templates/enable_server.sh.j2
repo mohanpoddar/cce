@@ -45,11 +45,13 @@ VERIFY_HOST={{ smb_verify_host | default(ansible_facts['all_ipv4_addresses'][0] 
 log "verifying samba with smbclient against localhost, 127.0.0.1 and $VERIFY_HOST"
 # Try multiple hosts to increase chance of successful verification and show which one works
 smb_output=""
-for h in localhost 127.0.0.1 "${VERIFY_HOST}"; do
+  for h in localhost 127.0.0.1 "${VERIFY_HOST}"; do
   log "trying smbclient against $h"
-  attempt=$(smbclient -L "$h" -N 2>&1 || true)
+  # Use absolute path to smbclient to avoid PATH differences under sudo
+  attempt=$(/usr/bin/smbclient -L "$h" -N 2>&1 || true)
   echo "--- smbclient output for $h ---"
   echo "$attempt"
+  echo "--- smbclient exit code: $? ---"
   if [ -n "$attempt" ]; then
     smb_output="$attempt"
     break
