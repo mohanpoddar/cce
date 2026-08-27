@@ -8,14 +8,19 @@ st.markdown("""
 <style>
 :root{ --bg:#071018; --panel:#0f1720; --muted:#94a3b8; --accent:#0ea5ff; --card:#0b1220; --glass: rgba(255,255,255,0.02); }
 body { background: radial-gradient(circle at 10% 10%, rgba(14,165,255,0.04), transparent 15%), linear-gradient(180deg,#05121a 0%, #031018 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
-.dashboard { max-width:1400px; margin:18px auto; padding: 20px 12px; }
-.card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:14px; padding:18px; box-shadow: 0 10px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
+.dashboard { max-width:1600px; margin:18px auto; padding: 20px 12px; }
+.card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:14px; padding:20px; box-shadow: 0 10px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
 .icon-wrap{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; }
 .title{ font-weight:700; font-size:16px; color:#e6eef8; }
 .subtitle{ color:var(--muted); font-size:13px; }
 .output { background: linear-gradient(180deg,#051726, #03101a); border-radius:8px; padding:12px; color:#cfe9ff; font-family: monospace; white-space: pre-wrap; max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,0.02) }
 .header-meta { color:var(--muted); font-size:13px; margin-left:6px }
 #app-container { padding-bottom:34px }
+
+/* ensure title and subtitle can wrap nicely and avoid overlap with icon */
+.title{ white-space: normal; display:block; }
+.subtitle{ word-break: break-word; color:var(--muted); }
+.icon-wrap{ margin-right:10px; }
 /* Make Run buttons compact and horizontal */
 div.stButton > button, button[role="button"] {
     min-width:64px !important;
@@ -100,7 +105,7 @@ enable_action = next((a for a in actions if a.get('icon')=='enable_server' or (a
 disable_action = next((a for a in actions if a.get('icon')=='disable_server' or (a.get('command') and a.get('command').endswith('/scripts/disable_server.sh'))), None)
 if enable_action or disable_action:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    c1, c2 = st.columns([0.65,0.35])
+    c1, c2 = st.columns([0.72,0.28])
 
     # Enable primary
     enable_cmd = enable_action['command'] if enable_action else None
@@ -154,7 +159,7 @@ right_ops = ['mask','disable','stop','status']
 services = ['smbd','nmbd']
 
 st.markdown("<div class='card'>", unsafe_allow_html=True)
-left_col, divider_col, right_col = st.columns([0.62, 0.02, 0.36])
+left_col, divider_col, right_col = st.columns([0.7, 0.02, 0.7])
 
 with divider_col:
     st.markdown("<div style='width:3px; background: rgba(255,255,255,0.08); height:100%; margin:0 auto; border-radius:3px'></div>", unsafe_allow_html=True)
@@ -174,7 +179,7 @@ def render_row_for(op, svc, side):
         svg = p.read_text(encoding='utf-8') if p.exists() else ''
     except Exception:
         svg = ''
-    cols = st.columns([0.08, 0.80, 0.12])
+    cols = st.columns([0.07, 0.86, 0.07])
     with cols[0]:
         if svg:
             st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
