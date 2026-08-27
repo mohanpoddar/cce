@@ -1,7 +1,7 @@
 ---
 # defaults file for samba
 
-samba_workgroup: "WORKGROUP_CCEPL_DATASHARE"
+samba_workgroup: "WORKGROUP_CCEPL"
 samba_log_size: 5000
 
 # samba_shares: []

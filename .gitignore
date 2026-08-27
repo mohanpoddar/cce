@@ -1,0 +1,29 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Ansible
+*.retry
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+
+# Local environment/config
+.env
+.env.*

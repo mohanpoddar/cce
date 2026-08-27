@@ -88,6 +88,7 @@
     line: "WaylandEnable=false"
     state: present
     backup: yes
+  ignore_errors: yes
   diff: true
 
 
@@ -112,15 +113,24 @@
 ##
 ## Install chrome
 ##
-- name: Download chrome software
-  shell: wget -O /var/tmp/software/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+# Verify if chrome is already installed
+- name: Check if chrome is installed
+  shell: dpkg -l | grep google-chrome-stable
+  register: chrome_installed
+  ignore_errors: true
 
-- name: Update packages
-  shell: apt update
+- name: Install Google Chrome
+  block:
+    - name: Download chrome software
+      shell: wget -O /var/tmp/software/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
-- name: Install chrome
-  shell: dpkg --install /var/tmp/software/google-chrome-stable_current_amd64.deb
-  register: inst_chrome
+    - name: Update packages
+      shell: apt update
 
-- debug:
-    var: inst_chrome.stdout_lines
+    - name: Install chrome
+      shell: dpkg --install /var/tmp/software/google-chrome-stable_current_amd64.deb
+      register: inst_chrome
+
+    - debug:
+        var: inst_chrome.stdout_lines
+  when: chrome_installed.rc != 0

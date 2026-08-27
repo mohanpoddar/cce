@@ -1,0 +1,130 @@
+---
+- name: Ensure required APT packages are installed
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: yes
+
+- name: Create application parent directory
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+    recurse: yes
+
+- name: Create logs directory for the application
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}/logs"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+    recurse: yes
+
+- name: Ensure assets directory exists
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}/assets"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+
+- name: Copy dashboard icon assets individually
+  vars:
+    icon_files: "{{ lookup('ansible.builtin.fileglob', role_path + '/files/icons/*', wantlist=True) | map('basename') | list }}"
+  ansible.builtin.copy:
+    src: "icons/{{ item }}"
+    dest: "{{ app_parent_dir }}/assets/{{ item }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+  loop: "{{ icon_files }}"
+
+- name: Create Python virtualenv for application
+  ansible.builtin.command:
+    cmd: python3 -m venv "{{ venv_path }}"
+  args:
+    creates: "{{ venv_path }}/bin/activate"
+
+- name: Ensure scripts directory exists
+  ansible.builtin.file:
+    path: "{{ app_parent_dir }}/scripts"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy enable_server script
+  ansible.builtin.template:
+    src: enable_server.sh.j2
+    dest: "{{ app_parent_dir }}/scripts/enable_server.sh"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy disable_server script
+  ansible.builtin.template:
+    src: disable_server.sh.j2
+    dest: "{{ app_parent_dir }}/scripts/disable_server.sh"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install streamlit into virtualenv
+  ansible.builtin.pip:
+    name: streamlit
+    state: present
+    executable: "{{ venv_path }}/bin/pip"
+
+- name: Deploy Streamlit app
+  ansible.builtin.template:
+    src: app.py.j2
+    dest: "{{ app_parent_dir }}/app.py"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: '0644'
+  notify: Restart streamlit-dashboard
+
+- name: Create sudoers for devopsadmin to run defined commands without password
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/devopsadmin_streamlit
+    content: |
+      {% if streamlit_actions is defined and streamlit_actions | length > 0 %}
+      Cmnd_Alias STREAM_CMDS = {{ streamlit_actions | map(attribute='command') | join(', ') }}
+      {{ app_user }} ALL=(ALL) NOPASSWD: STREAM_CMDS
+      {% else %}
+      # No actions defined for streamlit_dashboard role
+      {% endif %}
+    owner: root
+    group: root
+    mode: '0440'
+  when: streamlit_actions is defined and streamlit_actions | length > 0
+
+- name: Validate sudoers syntax
+  ansible.builtin.command:
+    cmd: visudo -cf /etc/sudoers.d/devopsadmin_streamlit
+  register: visudo_check
+  failed_when: visudo_check.rc != 0
+  when: streamlit_actions is defined and streamlit_actions | length > 0
+
+- name: Deploy systemd service for Streamlit dashboard
+  ansible.builtin.template:
+    src: streamlit.service.j2
+    dest: /etc/systemd/system/{{ service_name }}.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  ansible.builtin.command:
+    cmd: systemctl daemon-reload
+
+- name: Enable and start Streamlit dashboard service
+  ansible.builtin.systemd:
+    name: "{{ service_name }}.service"
+    enabled: yes
+    state: started

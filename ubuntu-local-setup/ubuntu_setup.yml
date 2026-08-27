@@ -1,5 +1,5 @@
 ---
-- hosts: all,localhost
+- hosts: all
   # connection: local
   gather_facts: true
   vars:
@@ -13,5 +13,21 @@
 # # Add playbook roles
   roles:
   - home_ubuntu_setup
-  - onedrive_install
+  # - onedrive_install
   - samba
+  - streamlit_dashboard
+
+  post_tasks:
+    - name: Ensure Streamlit app is updated on managed hosts
+      ansible.builtin.template:
+        src: "roles/streamlit_dashboard/templates/app.py.j2"
+        dest: "{{ app_parent_dir | default('/home/devopsadmin/application') }}/app.py"
+        owner: "{{ app_user | default('devopsadmin') }}"
+        group: "{{ app_user | default('devopsadmin') }}"
+        mode: '0644'
+
+    - name: Reload systemd and restart Streamlit dashboard
+      ansible.builtin.systemd:
+        name: "{{ service_name | default('streamlit-dashboard') }}.service"
+        state: restarted
+        enabled: yes

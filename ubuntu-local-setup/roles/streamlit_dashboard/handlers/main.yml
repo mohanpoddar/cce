@@ -1,0 +1,6 @@
+---
+- name: Restart streamlit-dashboard
+  ansible.builtin.systemd:
+    name: "{{ service_name }}.service"
+    state: restarted
+    enabled: yes

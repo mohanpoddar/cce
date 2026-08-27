@@ -11,3 +11,11 @@ datacenter_map:
 
 # You can add other global mappings used by multiple roles here.
 ansible_python_interpreter: /usr/bin/python
+
+# Streamlit dashboard defaults (shared across hosts)
+app_parent_dir: /home/devopsadmin/application
+app_user: devopsadmin
+venv_path: "{{ app_parent_dir }}/.venv"
+service_name: streamlit-dashboard
+streamlit_port: 8501
+streamlit_address: 0.0.0.0

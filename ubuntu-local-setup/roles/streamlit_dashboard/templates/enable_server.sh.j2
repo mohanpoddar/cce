@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVICES=(smbd nmbd)
+
+log() {
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"
+}
+
+# Unmask services
+for s in "${SERVICES[@]}"; do
+  log "unmasking $s"
+  systemctl unmask "$s" || { log "failed to unmask $s"; exit 2; }
+done
+
+# Enable services
+for s in "${SERVICES[@]}"; do
+  log "enabling $s"
+  systemctl enable "$s" || { log "failed to enable $s"; exit 3; }
+done
+
+# Start services if enabled and not already active
+for s in "${SERVICES[@]}"; do
+  if systemctl is-enabled --quiet "$s"; then
+    if ! systemctl is-active --quiet "$s"; then
+      log "starting $s"
+      systemctl start "$s" || { log "failed to start $s"; exit 4; }
+    else
+      log "$s already active"
+    fi
+  else
+    log "$s not enabled; skipping start"
+  fi
+done
+
+# Show status for debugging
+for s in "${SERVICES[@]}"; do
+  log "status $s"
+  systemctl status "$s" --no-pager || true
+done
+
+# Verify Samba reachability using smbclient; configured at template render time
+VERIFY_HOST={{ smb_verify_host | default(ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1')) }}
+
+log "verifying samba with smbclient against localhost, 127.0.0.1 and $VERIFY_HOST"
+# Try multiple hosts to increase chance of successful verification and show which one works
+smb_output=""
+  for h in localhost 127.0.0.1 "${VERIFY_HOST}"; do
+  log "trying smbclient against $h"
+  # Use absolute path to smbclient to avoid PATH differences under sudo
+  attempt=$(/usr/bin/smbclient -L "$h" -N 2>&1 || true)
+  echo "--- smbclient output for $h ---"
+  echo "$attempt"
+  echo "--- smbclient exit code: $? ---"
+  if [ -n "$attempt" ]; then
+    smb_output="$attempt"
+    break
+  fi
+done
+
+if [ -z "$smb_output" ]; then
+  log "smbclient produced no output on any tested host; verification may have failed"
+  exit 5
+fi
+
+log "enable_server completed"

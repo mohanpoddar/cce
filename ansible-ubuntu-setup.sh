@@ -19,13 +19,14 @@ ansible_inv_file=/etc/ansible/hosts
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
 ANSIBLE_CMD=/usr//bin/ansible-playbook
 
-while getopts h:o:u: option
+while getopts h:o:u:s: option
 do 
     case "${option}"
         in
         h)hostname=${OPTARG};;
         o)orgusername=${OPTARG};;
         u)username=${OPTARG};;
+        s)live_samba_server_status=${OPTARG};;
     esac
 done
 
@@ -42,11 +43,13 @@ backup_conflicting_ppas () {
     done
 }
 
+apt_update () {
 apt upgrade -y
 # backup any conflicting PPA source files before updating package cache
-backup_conflicting_ppas
-
 apt-get update
+}
+
+backup_conflicting_ppas
 
 # Install basic initial packages
 pkg_install () {
@@ -180,15 +183,27 @@ EOF
 
 
 # # # Calling functions
+echo -e "Calling functions apt_update .......\n"
+apt_update
+
+echo -e "Calling functions pkg_install .......\n"
 pkg_install
+
+echo -e "Calling functions user_account_setup .......\n"
 user_account_setup
+
+echo -e "Calling functions install_ssh .......\n"
 install_ssh
+
+echo -e "Calling functions config_python_alternative .......\n"
 config_python_alternative
+
+echo -e "Calling functions configure_ansible .......\n"
 configure_ansible
 
 
 echo -e "Ansible role begins.......\n"
-$ANSIBLE_CMD -l localhost -e "ansible_python_interpreter=/usr/bin/python3" -e "username=$username" $PLAYBOOK
+$ANSIBLE_CMD -l localhost -e "ansible_python_interpreter=/usr/bin/python3" -e "username=$username" -e "live_samba_server_status=$live_samba_server_status" $PLAYBOOK
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
 
 echo -e "\nAnsible role ends......."

@@ -1,0 +1,27 @@
+---
+# Ensure the host IP and hostname mapping exist in /etc/hosts
+# Variables:
+#  - host_ip: explicit IP to add (defaults to ansible_default_ipv4.address)
+#  - host_name: explicit hostname to add (defaults to inventory_hostname)
+
+- name: Set defaults for host mapping
+  ansible.builtin.set_fact:
+    host_ip: >-
+      {{ host_ip | default(
+         (ansible_facts['default_ipv4']['address'] if (ansible_facts is defined and ansible_facts.get('default_ipv4')) else (
+           (ansible_facts['all_ipv4_addresses'][0] if (ansible_facts is defined and ansible_facts.get('all_ipv4_addresses')) else '127.0.0.1')
+         ))
+      ) }}
+    host_name: "{{ host_name | default(inventory_hostname) }}"
+    host_short: "{{ (host_name | default(inventory_hostname)).split('.')[0] }}"
+
+- name: Ensure host mapping is present in /etc/hosts (replace existing or append)
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^(\\S+)\\s+.*\\b{{ host_name }}\\b.*$'
+    line: "{{ host_ip }} {{ host_name }} {{ host_short }}"
+    create: yes
+    state: present
+    backup: yes
+    insertafter: EOF
+  become: true

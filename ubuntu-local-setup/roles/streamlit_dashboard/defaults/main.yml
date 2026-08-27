@@ -1,0 +1,41 @@
+---
+# Defaults for streamlit_dashboard role
+app_parent_dir: /home/devopsadmin/application
+app_user: devopsadmin
+venv_path: "{{ app_parent_dir }}/.venv"
+
+# Actions displayed in the dashboard (name, icon key, command)
+streamlit_actions:
+  - { name: "Unmask SMB service", icon: "unmask", command: "/usr/bin/systemctl unmask smbd" }
+  - { name: "Mask SMB service",   icon: "mask",   command: "/usr/bin/systemctl mask smbd" }
+  - { name: "Enable SMB service", icon: "enable", command: "/usr/bin/systemctl enable smbd" }
+  - { name: "Disable SMB service",icon: "disable",command: "/usr/bin/systemctl disable smbd" }
+  - { name: "Stop SMB service",   icon: "stop",   command: "/usr/bin/systemctl stop smbd" }
+  - { name: "Start SMB service",  icon: "start",  command: "/usr/bin/systemctl start smbd" }
+  - { name: "Status SMB service", icon: "status", command: "/usr/bin/systemctl status smbd" }
+  - { name: "Unmask NMB service", icon: "unmask", command: "/usr/bin/systemctl unmask nmbd" }
+  - { name: "Mask NMB service",   icon: "mask",   command: "/usr/bin/systemctl mask nmbd" }
+  - { name: "Enable NMB service", icon: "enable", command: "/usr/bin/systemctl enable nmbd" }
+  - { name: "Disable NMB service",icon: "disable",command: "/usr/bin/systemctl disable nmbd" }
+  - { name: "Stop NMB service",   icon: "stop",   command: "/usr/bin/systemctl stop nmbd" }
+  - { name: "Start NMB service",  icon: "start",  command: "/usr/bin/systemctl start nmbd" }
+  - { name: "Status NMB service", icon: "status", command: "/usr/bin/systemctl status nmbd" }
+
+# Compound server actions that run multiple commands via scripts
+  - { name: "Enable Server", icon: "enable_server", command: "{{ app_parent_dir }}/scripts/enable_server.sh" }
+  - { name: "Disable Server", icon: "disable_server", command: "{{ app_parent_dir }}/scripts/disable_server.sh" }
+
+# Fallback for older usage: keep `streamlit_commands` supported but prefer `streamlit_actions`.
+streamlit_commands: []
+
+streamlit_port: 8501
+streamlit_address: 0.0.0.0
+service_name: streamlit-dashboard
+enable_confirmation: true
+# Path where action runs are logged (app user will own this file)
+log_file: "{{ app_parent_dir }}/logs/actions.log"
+
+# Host/user used by the verification step inside the enable_server script.
+# By default we use the first IPv4 address discovered on the host.
+smb_verify_host: "{{ ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1') }}"
+smb_verify_user: "cce"

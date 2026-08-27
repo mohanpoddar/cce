@@ -1,0 +1,68 @@
+Here is your complete technical summary formatted cleanly as a plain text file. You can copy and paste this text directly into Notepad on your computer and save it as a .txt file for your records.text========================================================================
+SOPHOS PROTECTION FOR LINUX (SPL) - TECHNICAL SUMMARY
+========================================================================
+Host Configured: av-pc
+Operating System: Ubuntu / Linux
+Management Platform: Sophos Central Cloud (https://sophos.com)
+========================================================================
+
+------------------------------------------------------------------------
+PHASE 1: INSTALLATION & PROCESS VERIFICATION (UBUNTU CLI)
+------------------------------------------------------------------------
+1. Set execution permissions on the downloaded installer script:
+   # chmod +x sophossetup.sh
+
+2. Run the deployment script (automatically handles cloud tenant registration):
+   # ./sophossetup.sh
+
+3. Check that the service is running and all 6 core security daemons 
+   (av, safestore, deviceisolation, edr, eventjournaler, runtimedetections)
+   are active in the systemd slice:
+   # systemctl status sophos-spl
+
+4. Verify the installed base agent engine version details:
+   # cat /opt/sophos-spl/base/VERSION.ini
+
+
+------------------------------------------------------------------------
+PHASE 2: CLOUD SYNCHRONIZATION VERIFICATION
+------------------------------------------------------------------------
+1. Audit local connection logs to verify successful policy downloads (V3Policy)
+   and status packet updates (V1Status) to the cloud network:
+   # grep -i "successfully" /opt/sophos-spl/logs/base/sophosspl/management.log
+
+2. Web Verification: Log into Sophos Central -> Go to 'Devices' -> 'Servers'.
+   Confirm that the machine 'av-pc' appears online with a Green (Healthy) shield.
+
+
+------------------------------------------------------------------------
+PHASE 3: MONITORING SCAN LOGS
+------------------------------------------------------------------------
+
+LOCAL UBUNTU CLI LOGS:
+=====================
+* Stream and watch active scan operations in real-time:
+  # tail -f /opt/sophos-spl/plugins/av/log/av.log
+
+* Filter historical logs specifically for scan start and end events:
+  # grep -iE "scan started|scan completed" /opt/sophos-spl/plugins/av/log/av.log
+
+* View the localized history of blocked or quarantined malware threats:
+  # cat /opt/sophos-spl/plugins/av/log/detections.log
+
+
+SOPHOS CENTRAL PORTAL LOGS:
+==========================
+* Device Level History:
+  Go to Devices -> Servers -> Click 'av-pc' -> Open the 'Events' tab.
+
+* High Severity Issues:
+  Check the global 'Alerts' menu in the left panel for items requiring action.
+
+* Security Auditing:
+  Go to Reports -> Logs -> Events -> Filter by 'Server Protection' for 'av-pc'.
+
+========================================================================
+STATUS: SUCCESSFUL DEPLOYMENT & VERIFICATION COMPLETE
+========================================================================
+Use code with caution.Let me know if you would like me to add anything else to this reference sheet, such as uninstallation commands or directory exclusion configurations!
