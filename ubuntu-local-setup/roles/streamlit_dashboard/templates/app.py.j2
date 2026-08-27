@@ -10,7 +10,7 @@ st.markdown("""
 body { background: radial-gradient(circle at 10% 10%, rgba(14,165,255,0.04), transparent 15%), linear-gradient(180deg,#05121a 0%, #031018 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
 .dashboard { max-width:1600px; margin:18px auto; padding: 20px 12px; }
 .card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:14px; padding:20px; box-shadow: 0 10px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
-.icon-wrap{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; }
+.icon-wrap{ width:48px; height:48px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; }
 .title{ font-weight:700; font-size:16px; color:#e6eef8; }
 .subtitle{ color:var(--muted); font-size:13px; }
 .output { background: linear-gradient(180deg,#051726, #03101a); border-radius:8px; padding:12px; color:#cfe9ff; font-family: monospace; white-space: pre-wrap; max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,0.02) }
@@ -23,8 +23,8 @@ body { background: radial-gradient(circle at 10% 10%, rgba(14,165,255,0.04), tra
 .icon-wrap{ margin-right:10px; }
 /* primary tile layout */
 .primary-row { display:flex; align-items:center; gap:12px; }
-.primary-text { flex:1; min-width:280px; }
-.icon-wrap { flex-shrink:0; width:64px; height:64px; }
+.primary-text { flex:1; min-width:320px; }
+.primary-row .icon-wrap { flex-shrink:0; width:64px; height:64px; }
 /* Make Run buttons compact and horizontal and enforce horizontal text */
 div.stButton > button, button[role="button"] {
     min-width:72px !important;
@@ -200,7 +200,7 @@ def render_row_for(op, svc, side):
         svg = p.read_text(encoding='utf-8') if p.exists() else ''
     except Exception:
         svg = ''
-    cols = st.columns([0.07, 0.86, 0.07])
+    cols = st.columns([0.14, 0.72, 0.14])
     with cols[0]:
         if svg:
             st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
@@ -243,7 +243,7 @@ for i,a in enumerate(actions):
     if a['command'] in systemctl_cmds or a.get('icon') in ('enable_server','disable_server'):
         continue
     # render as normal row
-    cols = st.columns([0.12, 0.68, 0.2])
+    cols = st.columns([0.12, 0.76, 0.12])
     svg = ''
     try:
         p = Path(base_assets_dir) / f"{a.get('icon')}.svg"
