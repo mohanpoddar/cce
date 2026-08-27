@@ -1,272 +1,646 @@
-import streamlit as st
-import subprocess
+#!/usr/bin/env python3
+"""
+Devopsadmin Dashboard — Streamlit
+
+A modern, professional control panel for operators.
+
+Renders:
+  • Sidebar:    system identity, live SMB service status, theme toggle
+  • Header:     title + quick stats
+  • Tabs:       Overview • Actions • Activity Log • Help
+  • Confirm-before-execute dialogs
+  • Live streaming output of long-running commands
+
+Configuration is supplied via Ansible template variables:
+  - app_parent_dir
+  - log_file
+  - streamlit_actions (list of {name, icon, command})
+"""
+
+from __future__ import annotations
+
+import datetime as dt
 import shlex
+import subprocess
+import time
 from pathlib import Path
 
-st.set_page_config(page_title="Devopsadmin Dashboard", page_icon="📊")
-st.markdown("""
-<style>
-:root{ --bg:#071018; --panel:#0f1720; --muted:#94a3b8; --accent:#0ea5ff; --card:#0b1220; --glass: rgba(255,255,255,0.02); }
-body { background: radial-gradient(circle at 10% 10%, rgba(14,165,255,0.04), transparent 15%), linear-gradient(180deg,#05121a 0%, #031018 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
-.dashboard { max-width:1600px; margin:18px auto; padding: 20px 12px; }
-.card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:14px; padding:20px; box-shadow: 0 10px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
-.icon-wrap{ width:48px; height:48px; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:10px; }
-.title{ font-weight:700; font-size:16px; color:#e6eef8; }
-.subtitle{ color:var(--muted); font-size:13px; }
-.output { background: linear-gradient(180deg,#051726, #03101a); border-radius:8px; padding:12px; color:#cfe9ff; font-family: monospace; white-space: pre-wrap; max-height:520px; overflow:auto; border:1px solid rgba(255,255,255,0.02) }
-.header-meta { color:var(--muted); font-size:13px; margin-left:6px }
-#app-container { padding-bottom:34px }
+import streamlit as st
 
-/* ensure title and subtitle can wrap nicely and avoid overlap with icon */
-.title{ white-space: normal; display:block; }
-.subtitle{ word-break: break-word; color:var(--muted); }
-.icon-wrap{ margin-right:10px; }
-/* primary tile layout */
-.primary-row { display:flex; align-items:center; gap:12px; }
-.primary-text { flex:1; min-width:320px; }
-.primary-row .icon-wrap { flex-shrink:0; width:64px; height:64px; }
-/* Make Run buttons compact and horizontal and enforce horizontal text */
-div.stButton > button, button[role="button"] {
-    min-width:72px !important;
-    padding:8px 14px !important;
-    white-space:nowrap !important;
-    border-radius:8px !important;
-    background: rgba(255,255,255,0.02) !important;
-    color: #e6eef8 !important;
-    border: 1px solid rgba(255,255,255,0.04) !important;
-    display:inline-flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    writing-mode: horizontal-tb !important;
-    text-orientation: mixed !important;
-}
+# ---------------------------------------------------------------------------
+# Page configuration
+# ---------------------------------------------------------------------------
+st.set_page_config(
+    page_title="Devopsadmin Dashboard",
+    page_icon="🛰️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-/* Make the small run button container align center */
-.run-cell { display:flex; align-items:center; justify-content:center; }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div style='display:flex;align-items:center;gap:12px'>
-    <h1 style='margin:0;color:#e6eef8;font-size:28px'>Devopsadmin Dashboard</h1>
-    <div style='color:var(--muted);font-size:14px'> — Streamlined actions for operators</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("<div id='app-container' class='dashboard'>", unsafe_allow_html=True)
-
-# Build actions list
-actions = []
-{% if streamlit_actions is defined and streamlit_actions|length > 0 %}
+# ---------------------------------------------------------------------------
+# Configuration (from Ansible)
+# ---------------------------------------------------------------------------
+APP_PARENT_DIR = "{{ app_parent_dir }}"
+LOG_FILE       = "{{ log_file }}"
+ACTIONS: list[dict] = []
+{% if streamlit_actions is defined and streamlit_actions | length > 0 %}
 {% for a in streamlit_actions %}
-actions.append({"name": "{{ a.name }}", "icon": "{{ a.icon }}", "command": "{{ a.command }}"})
+ACTIONS.append({"name": "{{ a.name }}", "icon": "{{ a.icon }}", "command": "{{ a.command }}"})
 {% endfor %}
 {% endif %}
 
-log_file = "{{ log_file }}"
-base_assets_dir = "{{ app_parent_dir }}/assets"
-app_parent_dir = "{{ app_parent_dir }}"
+ASSETS_DIR = Path(APP_PARENT_DIR) / "assets"
 
-if 'pending_action' not in st.session_state:
-    st.session_state['pending_action'] = None
+# Theme palette
+THEMES = {
+    "dark": {
+        "bg":            "#0b1020",
+        "bg_grad":       "radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,0.10), transparent 60%), radial-gradient(900px 500px at 110% 10%, rgba(168,85,247,0.10), transparent 60%), linear-gradient(180deg,#070b18 0%,#0a0f1f 100%)",
+        "panel":         "#111733",
+        "panel_2":       "#0e1430",
+        "text":          "#e6ecff",
+        "muted":         "#8a93b2",
+        "border":        "rgba(255,255,255,0.08)",
+        "border_strong": "rgba(255,255,255,0.14)",
+        "accent":        "#38bdf8",
+        "accent_2":      "#a855f7",
+        "ok":            "#22c55e",
+        "warn":          "#f59e0b",
+        "danger":        "#ef4444",
+    },
+    "light": {
+        "bg":            "#f6f8fc",
+        "bg_grad":       "radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,0.08), transparent 60%), radial-gradient(900px 500px at 110% 10%, rgba(168,85,247,0.08), transparent 60%), linear-gradient(180deg,#ffffff 0%,#eef2fa 100%)",
+        "panel":         "#ffffff",
+        "panel_2":       "#f4f6fb",
+        "text":          "#0f172a",
+        "muted":         "#64748b",
+        "border":        "rgba(15,23,42,0.08)",
+        "border_strong": "rgba(15,23,42,0.14)",
+        "accent":        "#0284c7",
+        "accent_2":      "#7c3aed",
+        "ok":            "#16a34a",
+        "warn":          "#d97706",
+        "danger":        "#dc2626",
+    },
+}
 
-def append_log(entry):
+if "theme" not in st.session_state:
+    st.session_state.theme = "dark"
+P = THEMES[st.session_state.theme]
+
+# ---------------------------------------------------------------------------
+# Styles
+# ---------------------------------------------------------------------------
+def inject_styles(palette: dict) -> None:
+    css = f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    html, body, [data-testid="stAppViewContainer"] {{
+        background: {palette['bg_grad']};
+        color: {palette['text']};
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }}
+
+    #MainMenu, footer, header[data-testid="stHeader"] {{ visibility: hidden; height: 0; }}
+    .block-container {{ padding-top: 1.2rem; padding-bottom: 2rem; max-width: 1400px; }}
+
+    section[data-testid="stSidebar"] {{
+        background: linear-gradient(180deg, {palette['panel']} 0%, {palette['panel_2']} 100%);
+        border-right: 1px solid {palette['border']};
+    }}
+    section[data-testid="stSidebar"] .block-container {{ padding-top: 1rem; }}
+
+    h1, h2, h3, h4 {{ color: {palette['text']}; font-weight: 700; letter-spacing: -0.01em; }}
+
+    .card {{
+        background: linear-gradient(180deg, {palette['panel']} 0%, {palette['panel_2']} 100%);
+        border: 1px solid {palette['border']};
+        border-radius: 16px;
+        padding: 20px 22px;
+        box-shadow: 0 8px 32px rgba(2,6,23,0.18);
+    }}
+    .card-title {{
+        font-size: 12px; font-weight: 600;
+        color: {palette['muted']}; text-transform: uppercase; letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }}
+    .metric {{ font-size: 28px; font-weight: 700; color: {palette['text']}; line-height: 1.1; }}
+    .metric-sub {{ font-size: 13px; color: {palette['muted']}; margin-top: 4px; }}
+
+    .pill {{
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 3px 10px; border-radius: 999px;
+        font-size: 12px; font-weight: 600;
+        border: 1px solid {palette['border']};
+        background: {palette['panel_2']}; color: {palette['text']};
+    }}
+    .pill .dot {{ width: 8px; height: 8px; border-radius: 50%; }}
+    .pill.ok    .dot {{ background: {palette['ok']}; }}
+    .pill.warn  .dot {{ background: {palette['warn']}; }}
+    .pill.danger .dot {{ background: {palette['danger']}; }}
+    .pill.info  .dot {{ background: {palette['accent']}; }}
+
+    .hero {{
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 22px 26px; margin-bottom: 18px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(56,189,248,0.14), rgba(168,85,247,0.14));
+        border: 1px solid {palette['border_strong']};
+    }}
+    .hero h1 {{ margin: 0; font-size: 26px; font-weight: 800; }}
+    .hero .sub {{ color: {palette['muted']}; font-size: 14px; margin-top: 2px; }}
+
+    .ar {{
+        display: grid; grid-template-columns: 56px 1fr auto;
+        gap: 16px; align-items: center;
+        padding: 14px 16px; border-radius: 12px;
+        background: {palette['panel_2']};
+        border: 1px solid {palette['border']};
+        transition: border-color .15s ease, transform .15s ease;
+        margin-bottom: 10px;
+    }}
+    .ar:hover {{ border-color: {palette['border_strong']}; transform: translateY(-1px); }}
+    .ar .ico {{
+        width: 44px; height: 44px; border-radius: 10px;
+        display:flex; align-items:center; justify-content:center;
+        background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(168,85,247,0.18));
+        border: 1px solid {palette['border']}; color: {palette['accent']};
+    }}
+    .ar .ico svg {{ width: 22px; height: 22px; }}
+    .ar .name {{ font-weight: 600; font-size: 15px; color: {palette['text']}; }}
+    .ar .cmd  {{ font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: {palette['muted']}; margin-top: 2px; word-break: break-all; }}
+
+    .pt {{
+        position: relative; padding: 22px; border-radius: 16px;
+        background: linear-gradient(180deg, {palette['panel']} 0%, {palette['panel_2']} 100%);
+        border: 1px solid {palette['border']}; overflow: hidden;
+    }}
+    .pt::before {{
+        content: ""; position: absolute; inset: -1px; border-radius: 16px; padding: 1px;
+        background: linear-gradient(135deg, {palette['accent']}, {palette['accent_2']});
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor; mask-composite: exclude;
+        opacity: 0.35; pointer-events: none;
+    }}
+    .pt .label {{ color: {palette['muted']}; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }}
+    .pt .title {{ font-size: 20px; font-weight: 700; margin-top: 4px; }}
+    .pt .desc  {{ color: {palette['muted']}; font-size: 13px; margin-top: 6px; }}
+
+    div.stButton > button, button[role="button"] {{
+        border-radius: 10px !important;
+        border: 1px solid {palette['border_strong']} !important;
+        background: {palette['panel_2']} !important;
+        color: {palette['text']} !important;
+        font-weight: 600 !important;
+        padding: 8px 16px !important;
+        transition: all .15s ease !important;
+    }}
+    div.stButton > button:hover, button[role="button"]:hover {{
+        border-color: {palette['accent']} !important;
+        background: rgba(56,189,248,0.10) !important;
+        transform: translateY(-1px);
+    }}
+    button[kind="primary"] {{
+        background: linear-gradient(135deg, {palette['accent']}, {palette['accent_2']}) !important;
+        color: #fff !important; border: none !important;
+    }}
+
+    .console {{
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 12.5px; background: #05080f; color: #cfe9ff;
+        border: 1px solid {palette['border']}; border-radius: 12px;
+        padding: 14px 16px; max-height: 360px; overflow: auto;
+        white-space: pre-wrap; word-break: break-word;
+    }}
+    .console .ok    {{ color: #4ade80; }}
+    .console .err   {{ color: #fca5a5; }}
+    .console .info  {{ color: #93c5fd; }}
+
+    button[role="tab"] {{ font-weight: 600 !important; padding: 8px 14px !important; border-radius: 10px !important; }}
+
+    .footer {{ color: {palette['muted']}; font-size: 12px; text-align: center; margin-top: 18px; }}
+
+    ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
+    ::-webkit-scrollbar-thumb {{ background: {palette['border_strong']}; border-radius: 8px; }}
+    ::-webkit-scrollbar-track {{ background: transparent; }}
+
+    @keyframes pulse {{ 0%,100% {{ opacity: 1; }} 50% {{ opacity: .5; }} }}
+    .live-dot {{ animation: pulse 1.5s ease-in-out infinite; }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+
+inject_styles(P)
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+def now_str() -> str:
+    return dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def append_log(entry: str) -> None:
     try:
-        with open(log_file, 'a') as f:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(entry + "\n")
+    except Exception as e:
+        st.toast(f"Failed to write log: {e}", icon="⚠️")
+
+
+def load_log(limit: int = 200) -> list[str]:
+    p = Path(LOG_FILE)
+    if not p.exists():
+        return []
+    try:
+        lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        return lines[-limit:][::-1]
+    except Exception:
+        return []
+
+
+def get_status_icon_svg(name: str) -> str:
+    """Return inline SVG for a status/action icon."""
+    icons = {
+        "enable":   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+        "disable":  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>',
+        "start":    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+        "stop":     '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>',
+        "restart":  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>',
+        "status":   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+        "unmask":   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+        "mask":     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7z"/><path d="M5 5l14 14"/></svg>',
+        "enable_server":  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg>',
+        "disable_server": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M5 5l14 14"/></svg>',
+        "shield":   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+        "server":   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><circle cx="7" cy="7" r=".8" fill="currentColor"/><circle cx="7" cy="17" r=".8" fill="currentColor"/></svg>',
+        "search":   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+        "log":      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>',
+    }
+    if name in icons:
+        return icons[name]
+    try:
+        p = ASSETS_DIR / f"{name}.svg"
+        if p.exists():
+            return p.read_text(encoding="utf-8")
+    except Exception:
+        pass
+    return '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/></svg>'
+
+
+def run_command_streaming(name: str, command: str, container) -> tuple[int, str]:
+    """Run a command via sudo and stream output into a Streamlit container."""
+    log_lines: list[str] = []
+    code_box = container.empty()
+    out_box  = container.empty()
+
+    try:
+        args = ["sudo"] + shlex.split(command)
+    except Exception as e:
+        container.error(f"Could not parse command: {e}")
+        return 1, ""
+
+    try:
+        proc = subprocess.Popen(
+            args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1,
+        )
+    except FileNotFoundError as e:
+        container.error(f"Failed to launch: {e}")
+        return 127, ""
+
+    start = time.time()
+    if proc.stdout:
+        for raw in iter(proc.stdout.readline, ""):
+            line = raw.rstrip("\n")
+            log_lines.append(line)
+            html = "".join(f"<div class='info'>{_escape(l)}</div>" for l in log_lines[-200:])
+            out_box.markdown(f"<div class='console'>{html}</div>", unsafe_allow_html=True)
+        proc.stdout.close()
+
+    code = proc.wait()
+    duration = time.time() - start
+    ts = dt.datetime.utcnow().isoformat()
+    append_log(
+        f"{ts} | {name} | {command} | return={code} | duration={duration:.2f}s | "
+        f"out={(' | '.join(log_lines))[:4000]}"
+    )
+
+    css_class = "ok" if code == 0 else "err"
+    code_box.markdown(
+        f"<div class='console'><div class='{css_class}'>● Return code: {code}</div>"
+        f"<div class='info'>Duration: {duration:.2f}s</div></div>",
+        unsafe_allow_html=True,
+    )
+    return code, "\n".join(log_lines)
+
+
+def _escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def shell_capture(command: str, timeout: float = 1.5) -> str:
+    try:
+        out = subprocess.run(
+            ["sudo"] + shlex.split(command),
+            capture_output=True, text=True, timeout=timeout,
+        )
+        return (out.stdout or "") + (out.stderr or "")
+    except Exception:
+        return ""
+
+
+def get_service_state(service: str) -> str:
+    out = shell_capture(f"/usr/bin/systemctl is-active {service}").strip()
+    return out if out in ("active", "inactive", "masked", "failed", "unknown") else "unknown"
+
+
+# Initialise session state keys
+for k, v in [("pending_action", None), ("confirmed", None)]:
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# ---------------------------------------------------------------------------
+# Sidebar
+# ---------------------------------------------------------------------------
+with st.sidebar:
+    st.markdown("### 🛰️ Devopsadmin")
+    st.caption("Operator control panel")
+    st.divider()
+
+    theme_label = "☀️ Light mode" if st.session_state.theme == "dark" else "🌙 Dark mode"
+    if st.button(theme_label, use_container_width=True, key="theme_toggle"):
+        st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
+        st.rerun()
+
+    st.divider()
+    st.markdown("**Services**")
+    for svc in ("smbd", "nmbd"):
+        state = get_service_state(svc)
+        klass = "ok" if state == "active" else ("warn" if state == "inactive" else "danger")
+        label = {"active": "Running", "inactive": "Stopped", "masked": "Masked",
+                 "failed": "Failed", "unknown": "Unknown"}.get(state, state.title())
+        st.markdown(
+            f"<div class='pill {klass}'><span class='dot'></span>{svc.upper()} · {label}</div>",
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+    st.markdown("**System**")
+    st.caption(f"🕒 {now_str()}")
+    st.caption(f"📁 {APP_PARENT_DIR}")
+
+    st.divider()
+    if st.button("🔄 Refresh status", use_container_width=True, key="refresh_status"):
+        st.rerun()
+
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
+st.markdown(f"""
+<div class="hero">
+  <div>
+    <h1>Devopsadmin Dashboard</h1>
+    <div class="sub">Streamlined actions for operators · {now_str()}</div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <span class="pill info"><span class="dot live-dot"></span> Live</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Quick stats
+total_actions = len(ACTIONS)
+samba_active = get_service_state("smbd") == "active"
+nmb_active   = get_service_state("nmbd") == "active"
+log_count    = sum(1 for _ in Path(LOG_FILE).open("r", encoding="utf-8", errors="replace")) if Path(LOG_FILE).exists() else 0
+
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    st.markdown(f"<div class='card'><div class='card-title'>Total Actions</div><div class='metric'>{total_actions}</div><div class='metric-sub'>Configured</div></div>", unsafe_allow_html=True)
+with c2:
+    klass = "ok" if samba_active else "danger"
+    st.markdown(f"<div class='card'><div class='card-title'>SMB Service</div><div class='metric'><span class='pill {klass}'><span class='dot'></span>{'Running' if samba_active else 'Stopped'}</span></div><div class='metric-sub'>smbd</div></div>", unsafe_allow_html=True)
+with c3:
+    klass = "ok" if nmb_active else "danger"
+    st.markdown(f"<div class='card'><div class='card-title'>NMB Service</div><div class='metric'><span class='pill {klass}'><span class='dot'></span>{'Running' if nmb_active else 'Stopped'}</span></div><div class='metric-sub'>nmbd</div></div>", unsafe_allow_html=True)
+with c4:
+    st.markdown(f"<div class='card'><div class='card-title'>Activity Log</div><div class='metric'>{log_count}</div><div class='metric-sub'>Entries recorded</div></div>", unsafe_allow_html=True)
+
+st.write("")
+
+# ---------------------------------------------------------------------------
+# Tabs
+# ---------------------------------------------------------------------------
+tab_overview, tab_actions, tab_log, tab_help = st.tabs(["📊 Overview", "⚡ Actions", "📜 Activity Log", "ℹ️ Help"])
+
+# -- Overview tab ---------------------------------------------------------
+with tab_overview:
+    left, right = st.columns([1.05, 0.95], gap="large")
+
+    with left:
+        st.markdown("#### Server lifecycle")
+        st.caption("Compound actions that orchestrate multiple services.")
+
+        enable_action  = next((a for a in ACTIONS if a.get("icon") == "enable_server"
+                               or (a.get("command") or "").endswith("/scripts/enable_server.sh")), None)
+        disable_action = next((a for a in ACTIONS if a.get("icon") == "disable_server"
+                               or (a.get("command") or "").endswith("/scripts/disable_server.sh")), None)
+
+        p1, p2 = st.columns(2, gap="medium")
+        with p1:
+            st.markdown("""
+            <div class="pt">
+              <div class="label">Enable Flow</div>
+              <div class="title">🟢 Enable Server</div>
+              <div class="desc">Unmask · enable · start smbd &amp; nmbd, then verify reachability.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            if enable_action:
+                if st.button("Run Enable Server", key="run_primary_enable", type="primary", use_container_width=True):
+                    st.session_state.pending_action = {"key": "primary_enable", "name": "Enable Server", "command": enable_action["command"]}
+            else:
+                st.caption("Not configured")
+
+        with p2:
+            st.markdown("""
+            <div class="pt">
+              <div class="label">Disable Flow</div>
+              <div class="title">🔴 Disable Server</div>
+              <div class="desc">Stop · disable · mask smbd &amp; nmbd to fully take services offline.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            if disable_action:
+                if st.button("Run Disable Server", key="run_primary_disable", type="primary", use_container_width=True):
+                    st.session_state.pending_action = {"key": "primary_disable", "name": "Disable Server", "command": disable_action["command"]}
+            else:
+                st.caption("Not configured")
+
+    with right:
+        st.markdown("#### Service status")
+        st.caption("Live systemd state for managed units.")
+
+        for svc in ("smbd", "nmbd"):
+            state = get_service_state(svc)
+            klass = {"active": "ok", "inactive": "warn", "masked": "danger", "failed": "danger"}.get(state, "info")
+            label = {"active": "● running", "inactive": "○ stopped", "masked": "✕ masked",
+                     "failed": "⚠ failed"}.get(state, "• " + state)
+            enabled_out = shell_capture(f"/usr/bin/systemctl is-enabled {svc}").strip()
+            enabled_label = {"enabled": "enabled at boot", "disabled": "disabled at boot",
+                             "masked": "masked", "static": "static"}.get(enabled_out, enabled_out or "unknown")
+            st.markdown(f"""
+            <div class="card" style="margin-bottom:12px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-weight:700; font-size:16px;">{svc.upper()}</div>
+                  <div style="color:{P['muted']}; font-size:12px;">{enabled_label}</div>
+                </div>
+                <span class="pill {klass}"><span class="dot"></span>{label}</span>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# -- Actions tab ----------------------------------------------------------
+with tab_actions:
+    st.markdown("#### All actions")
+    query = st.text_input("Search actions", placeholder="Filter by name or command…", label_visibility="collapsed")
+
+    ENABLE_OPS  = {"unmask", "enable", "start"}
+    DISABLE_OPS = {"mask", "disable", "stop"}
+
+    def cmd_op(cmd: str) -> str:
+        parts = cmd.split()
+        if "systemctl" in parts:
+            i = parts.index("systemctl")
+            if i + 1 < len(parts):
+                return parts[i + 1]
+        return ""
+
+    grouped = {"Enable Flow": [], "Disable Flow": [], "Other": []}
+    for a in ACTIONS:
+        op = cmd_op(a.get("command", ""))
+        if op in ENABLE_OPS:
+            grouped["Enable Flow"].append(a)
+        elif op in DISABLE_OPS:
+            grouped["Disable Flow"].append(a)
+        elif a.get("icon") in ("enable_server", "disable_server"):
+            continue  # already shown in overview
+        else:
+            grouped["Other"].append(a)
+
+    def matches(a: dict) -> bool:
+        if not query:
+            return True
+        q = query.lower()
+        return q in a["name"].lower() or q in a["command"].lower()
+
+    # Confirmation dialog (Streamlit >= 1.31)
+    confirm_dialog = None
+    try:
+        @st.dialog("Confirm action", width="small")
+        def confirm_dialog(name: str, command: str, key: str) -> None:  # noqa: F811
+            st.write(f"You are about to run **{name}**.")
+            st.code(command, language="bash")
+            st.warning("This will execute the command with elevated privileges.")
+            a, b = st.columns(2)
+            with a:
+                if st.button("Cancel", key=f"cancel_{key}", use_container_width=True):
+                    st.session_state.pending_action = None
+                    st.rerun()
+            with b:
+                if st.button("Confirm & run", key=f"confirm_{key}", type="primary", use_container_width=True):
+                    st.session_state.confirmed = {"name": name, "command": command, "key": key}
+                    st.session_state.pending_action = None
+                    st.rerun()
     except Exception:
         pass
 
-def execute_and_display(name, command):
-    placeholder = st.empty()
-    try:
-        args = ['sudo'] + shlex.split(command)
-        # Stream output live so UI shows long-running command output as it appears
-        proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        output_lines = []
-        if proc.stdout:
-            for line in iter(proc.stdout.readline, ''):
-                if line == '':
-                    break
-                output_lines.append(line.rstrip('\n'))
-                placeholder.markdown('<div class="output">' + '<br>'.join(output_lines) + '</div>', unsafe_allow_html=True)
-            proc.stdout.close()
-        code = proc.wait()
-        out = '\n'.join(output_lines)
-        err = ''
-        timestamp = __import__('datetime').datetime.utcnow().isoformat()
-        log_entry = f"{timestamp} | {name} | {command} | return={code} | out={out.strip()} | err={err.strip()}"
-        append_log(log_entry)
-        placeholder.markdown(f"**Return code:** {code}")
-        if out:
-            placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-        if err:
-            placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-    except Exception as e:
-        st.error(str(e))
-
-# Helpers to find action indices by exact command
-action_index_by_command = {a['command']: i for i,a in enumerate(actions)}
-
-# Primary Enable/Disable tiles (top)
-# Detect primary actions by icon or by command path ending with the script names
-enable_action = next((a for a in actions if a.get('icon')=='enable_server' or (a.get('command') and a.get('command').endswith('/scripts/enable_server.sh'))), None)
-disable_action = next((a for a in actions if a.get('icon')=='disable_server' or (a.get('command') and a.get('command').endswith('/scripts/disable_server.sh'))), None)
-if enable_action or disable_action:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    c1, c2 = st.columns([0.55,0.45])
-
-    # Enable primary
-    enable_cmd = enable_action['command'] if enable_action else None
-    enable_icon = enable_action.get('icon') if enable_action else 'enable_server'
-    with c1:
-        if enable_cmd:
-            try:
-                p = Path(base_assets_dir) / f"{enable_icon}.svg"
-                svg = p.read_text(encoding='utf-8') if p.exists() else ''
-            except Exception:
-                svg = ''
-            html = f"""
-            <div class='primary-row'>
-              <div class='icon-wrap'>{svg}</div>
-              <div class='primary-text'>
-                <div class='title'>Enable Server</div>
-                <div class='subtitle'>{enable_cmd}</div>
+    def action_row(a: dict, idx: int) -> None:
+        key = f"act_{idx}"
+        cols = st.columns([0.6, 0.18, 0.22])
+        with cols[0]:
+            st.markdown(f"""
+            <div class="ar" style="margin-bottom:0;">
+              <div class="ico">{get_status_icon_svg(a['icon'])}</div>
+              <div>
+                <div class="name">{a['name']}</div>
+                <div class="cmd">{a['command']}</div>
               </div>
             </div>
-            """
-            st.markdown(html, unsafe_allow_html=True)
-            if st.button('Run', key='run_primary_enable'):
-                st.session_state['pending_action'] = 'primary_enable'
-            if st.session_state.get('pending_action') == 'primary_enable':
-                st.warning('Are you sure you want to run Enable Server?')
-                if st.button('Confirm', key='confirm_primary_enable'):
-                    execute_and_display('Enable Server', enable_cmd)
-                    st.session_state['pending_action'] = None
+            """, unsafe_allow_html=True)
+        with cols[2]:
+            if st.button("Run", key=f"run_{key}", use_container_width=True):
+                st.session_state.pending_action = {"key": key, "name": a["name"], "command": a["command"]}
+                if confirm_dialog is not None:
+                    confirm_dialog(a["name"], a["command"], key)
+                st.rerun()
 
-    # Disable primary
-    disable_cmd = disable_action['command'] if disable_action else None
-    disable_icon = disable_action.get('icon') if disable_action else 'disable_server'
-    with c2:
-        if disable_cmd:
-            try:
-                p = Path(base_assets_dir) / f"{disable_icon}.svg"
-                svg = p.read_text(encoding='utf-8') if p.exists() else ''
-            except Exception:
-                svg = ''
-            html = f"""
-            <div class='primary-row'>
-              <div class='icon-wrap'>{svg}</div>
-              <div class='primary-text'>
-                <div class='title'>Disable Server</div>
-                <div class='subtitle'>{disable_cmd}</div>
-              </div>
-            </div>
-            """
-            st.markdown(html, unsafe_allow_html=True)
-            if st.button('Run', key='run_primary_disable'):
-                st.session_state['pending_action'] = 'primary_disable'
-            if st.session_state.get('pending_action') == 'primary_disable':
-                st.warning('Are you sure you want to run Disable Server?')
-                if st.button('Confirm', key='confirm_primary_disable'):
-                    execute_and_display('Disable Server', disable_cmd)
-                    st.session_state['pending_action'] = None
+    # Handle confirmation result
+    if st.session_state.get("confirmed"):
+        c = st.session_state.confirmed
+        st.session_state.confirmed = None
+        st.markdown(f"##### ▶ Running: {c['name']}")
+        out_container = st.container()
+        with out_container:
+            run_command_streaming(c["name"], c["command"], out_container)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    for group_name in ("Enable Flow", "Disable Flow", "Other"):
+        items = [a for a in grouped[group_name] if matches(a)]
+        if not items:
+            continue
+        st.markdown(f"##### {group_name}")
+        for a in items:
+            action_row(a, hash(a["command"]) & 0xFFFF)
 
-# Two-column command lists
-left_ops = ['unmask','enable','start','status']
-right_ops = ['mask','disable','stop','status']
-services = ['smbd','nmbd']
+    if not any(grouped.values()):
+        st.info("No actions configured. Add entries to `streamlit_actions` in your Ansible vars.")
 
-st.markdown("<div class='card'>", unsafe_allow_html=True)
-left_col, divider_col, right_col = st.columns([0.7, 0.02, 0.7])
+# -- Activity log tab -----------------------------------------------------
+with tab_log:
+    st.markdown("#### Activity log")
+    st.caption(f"Append-only log of action executions. Path: `{LOG_FILE}`")
 
-with divider_col:
-    st.markdown("<div style='width:3px; background: rgba(255,255,255,0.08); height:100%; margin:0 auto; border-radius:3px'></div>", unsafe_allow_html=True)
+    col_a, col_b, col_c = st.columns([0.5, 0.25, 0.25])
+    with col_a:
+        limit = st.select_slider("Show last N entries", options=[50, 100, 200, 500, 1000], value=200)
+    with col_b:
+        if st.button("🔄 Refresh", key="log_refresh", use_container_width=True):
+            st.rerun()
+    with col_c:
+        log_text = "\n".join(load_log(limit=limit))
+        st.download_button("⬇️ Download", data=log_text or "", file_name="actions.log",
+                           mime="text/plain", use_container_width=True,
+                           disabled=not bool(log_text))
 
-def render_row_for(op, svc, side):
-    cmd = f"/usr/bin/systemctl {op} {svc}"
-    action_idx = action_index_by_command.get(cmd)
-    name = f"{op.capitalize()} {svc}"
-    icon = 'status'
-    if action_idx is not None:
-        action = actions[action_idx]
-        name = action.get('name')
-        icon = action.get('icon')
-    svg = ''
-    try:
-        p = Path(base_assets_dir) / f"{icon}.svg"
-        svg = p.read_text(encoding='utf-8') if p.exists() else ''
-    except Exception:
-        svg = ''
-    cols = st.columns([0.14, 0.72, 0.14])
-    with cols[0]:
-        if svg:
-            st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown("<div class='icon-wrap'></div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown(f"<div class='title'>{name}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='subtitle'>{cmd}</div>", unsafe_allow_html=True)
-    key = f"run_{svc}_{op}_{side}"
-    confirm = f"confirm_{svc}_{op}_{side}"
-    with cols[2]:
-        # center the run button and keep it compact
-        st.markdown("<div class='run-cell'>", unsafe_allow_html=True)
-        if st.button('Run', key=key):
-            st.session_state['pending_action'] = key
-        st.markdown("</div>", unsafe_allow_html=True)
-    if st.session_state.get('pending_action') == key:
-        st.warning(f"Are you sure you want to run **{name}**?")
-        if st.button('Confirm', key=confirm):
-            execute_and_display(name, cmd)
-            st.session_state['pending_action'] = None
+    entries = load_log(limit=limit)
+    if not entries:
+        st.info("No log entries yet.")
+    else:
+        for line in entries:
+            klass = "ok" if "return=0" in line else ("err" if "return=" in line else "info")
+            st.markdown(f"<div class='console'><div class='{klass}'>{_escape(line)}</div></div>", unsafe_allow_html=True)
 
-with left_col:
-    st.markdown("<strong style='color:#e6eef8'>Enable Flow</strong>", unsafe_allow_html=True)
-    for svc in services:
-        for op in left_ops:
-            render_row_for(op, svc, 'L')
+# -- Help tab -------------------------------------------------------------
+with tab_help:
+    st.markdown("#### About this dashboard")
+    st.markdown("""
+    This dashboard is generated by the `streamlit_dashboard` Ansible role and runs as a
+    systemd service. It exposes a curated set of operator actions that are authorized
+    via a dedicated sudoers drop-in file.
 
-with right_col:
-    st.markdown("<strong style='color:#e6eef8'>Disable Flow</strong>", unsafe_allow_html=True)
-    for svc in services:
-        for op in right_ops:
-            render_row_for(op, svc, 'R')
+    **How it works**
+    1. Configure actions in `streamlit_actions` (defaults or group_vars).
+    2. The role installs a Python venv with Streamlit and deploys this app.
+    3. A systemd unit (`streamlit-dashboard.service`) keeps the app running on port `8501`.
+    4. Each click runs the configured command via `sudo`, streams stdout/stderr live,
+       and appends a structured line to `actions.log`.
 
-st.markdown('</div>', unsafe_allow_html=True)
+    **Security**
+    - Commands are executed with the unprivileged `app_user`; only the whitelisted commands
+      are granted via `/etc/sudoers.d/devopsadmin_streamlit`.
+    - Confirmation is required before any state-changing command.
+    """)
 
-# Render any other actions that are not standard systemctl ones
-systemctl_cmds = set(f"/usr/bin/systemctl {op} {svc}" for svc in services for op in (left_ops+right_ops))
-for i,a in enumerate(actions):
-    if a['command'] in systemctl_cmds or a.get('icon') in ('enable_server','disable_server'):
-        continue
-    # render as normal row
-    cols = st.columns([0.12, 0.76, 0.12])
-    svg = ''
-    try:
-        p = Path(base_assets_dir) / f"{a.get('icon')}.svg"
-        svg = p.read_text(encoding='utf-8') if p.exists() else ''
-    except Exception:
-        svg = ''
-    with cols[0]:
-        if svg:
-            st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown("<div class='icon-wrap'></div>", unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown(f"<div class='title'>{a.get('name')}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='subtitle'>{a.get('command')}</div>", unsafe_allow_html=True)
-    run_key = f"run_other_{i}"
-    confirm_key = f"confirm_other_{i}"
-    with cols[2]:
-        if st.button('Run', key=run_key):
-            st.session_state['pending_action'] = run_key
-    if st.session_state.get('pending_action') == run_key:
-        st.warning(f"Are you sure you want to run **{a.get('name')}**?")
-        if st.button('Confirm', key=confirm_key):
-            execute_and_display(a.get('name'), a.get('command'))
-            st.session_state['pending_action'] = None
-
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("<div class='footer'>Devopsadmin Dashboard · Streamlit · built by Ansible</div>", unsafe_allow_html=True)
