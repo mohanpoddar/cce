@@ -30,5 +30,10 @@ for s in "${SERVICES[@]}"; do
   log "status $s"
   systemctl status "$s" --no-pager || true
 done
+# After disable, report smbclient output (non-fatal)
+VERIFY_HOST={{ smb_verify_host | default(ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1')) }}
+log "checking smbclient output against $VERIFY_HOST (expected: not serving)"
+smb_output=$(smbclient -L "${VERIFY_HOST}" -N 2>&1 || true)
+echo "$smb_output"
 
 log "disable_server completed"
