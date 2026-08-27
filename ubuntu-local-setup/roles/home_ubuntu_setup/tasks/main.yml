@@ -8,6 +8,7 @@
   with_items:
     - create_user.yml
     - install_packages.yml
+    - setup_hosts.yml
     # - fix_grub.yml # Do not eanble this
     - setup_cron.yml
   loop_control:
