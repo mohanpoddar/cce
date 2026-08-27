@@ -64,16 +64,6 @@ def execute_and_display(name, command):
             placeholder.markdown('<div class="output">' + out.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
         if err:
             placeholder.markdown('<div class="output">' + err.replace('\n','<br>') + '</div>', unsafe_allow_html=True)
-        # Also show the recent action log file contents, if present
-        try:
-            p = Path(log_file)
-            if p.exists():
-                log_text = p.read_text(encoding='utf-8')
-                tail_lines = log_text.splitlines()[-200:]
-                if tail_lines:
-                    placeholder.markdown('<div class="output"><strong>Action log (last {} lines):</strong><br>'.format(len(tail_lines)) + '<br>'.join(tail_lines) + '</div>', unsafe_allow_html=True)
-        except Exception:
-            pass
     except Exception as e:
         st.error(str(e))
 
