@@ -83,7 +83,7 @@ if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/d
         enable_cmd = None
         enable_icon = 'enable_server'
     with c1:
-            if enable_cmd:
+        if enable_cmd:
             try:
                 p = Path(base_assets_dir) / f"{enable_icon}.svg"
                 svg = p.read_text(encoding='utf-8') if p.exists() else ''
@@ -110,7 +110,7 @@ if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/d
         disable_cmd = None
         disable_icon = 'disable_server'
     with c2:
-            if disable_cmd:
+        if disable_cmd:
             try:
                 p = Path(base_assets_dir) / f"{disable_icon}.svg"
                 svg = p.read_text(encoding='utf-8') if p.exists() else ''
