@@ -21,15 +21,24 @@ body { background: radial-gradient(circle at 10% 10%, rgba(14,165,255,0.04), tra
 .title{ white-space: normal; display:block; }
 .subtitle{ word-break: break-word; color:var(--muted); }
 .icon-wrap{ margin-right:10px; }
-/* Make Run buttons compact and horizontal */
+/* primary tile layout */
+.primary-row { display:flex; align-items:center; gap:12px; }
+.primary-text { flex:1; min-width:280px; }
+.icon-wrap { flex-shrink:0; width:64px; height:64px; }
+/* Make Run buttons compact and horizontal and enforce horizontal text */
 div.stButton > button, button[role="button"] {
-    min-width:64px !important;
-    padding:6px 12px !important;
+    min-width:72px !important;
+    padding:8px 14px !important;
     white-space:nowrap !important;
     border-radius:8px !important;
     background: rgba(255,255,255,0.02) !important;
     color: #e6eef8 !important;
     border: 1px solid rgba(255,255,255,0.04) !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
 }
 
 /* Make the small run button container align center */
@@ -39,7 +48,7 @@ div.stButton > button, button[role="button"] {
 
 st.markdown("""
 <div style='display:flex;align-items:center;gap:12px'>
-    <h1 style='margin:0;color:#e6eef8'>Devopsadmin Dashboard</h1>
+    <h1 style='margin:0;color:#e6eef8;font-size:28px'>Devopsadmin Dashboard</h1>
     <div style='color:var(--muted);font-size:14px'> — Streamlined actions for operators</div>
 </div>
 """, unsafe_allow_html=True)
@@ -105,7 +114,7 @@ enable_action = next((a for a in actions if a.get('icon')=='enable_server' or (a
 disable_action = next((a for a in actions if a.get('icon')=='disable_server' or (a.get('command') and a.get('command').endswith('/scripts/disable_server.sh'))), None)
 if enable_action or disable_action:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    c1, c2 = st.columns([0.72,0.28])
+    c1, c2 = st.columns([0.55,0.45])
 
     # Enable primary
     enable_cmd = enable_action['command'] if enable_action else None
@@ -117,10 +126,16 @@ if enable_action or disable_action:
                 svg = p.read_text(encoding='utf-8') if p.exists() else ''
             except Exception:
                 svg = ''
-            if svg:
-                st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='title'>Enable Server</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='subtitle'>{enable_cmd}</div>", unsafe_allow_html=True)
+            html = f"""
+            <div class='primary-row'>
+              <div class='icon-wrap'>{svg}</div>
+              <div class='primary-text'>
+                <div class='title'>Enable Server</div>
+                <div class='subtitle'>{enable_cmd}</div>
+              </div>
+            </div>
+            """
+            st.markdown(html, unsafe_allow_html=True)
             if st.button('Run', key='run_primary_enable'):
                 st.session_state['pending_action'] = 'primary_enable'
             if st.session_state.get('pending_action') == 'primary_enable':
@@ -139,10 +154,16 @@ if enable_action or disable_action:
                 svg = p.read_text(encoding='utf-8') if p.exists() else ''
             except Exception:
                 svg = ''
-            if svg:
-                st.markdown(f"<div class='icon-wrap'>{svg}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='title'>Disable Server</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='subtitle'>{disable_cmd}</div>", unsafe_allow_html=True)
+            html = f"""
+            <div class='primary-row'>
+              <div class='icon-wrap'>{svg}</div>
+              <div class='primary-text'>
+                <div class='title'>Disable Server</div>
+                <div class='subtitle'>{disable_cmd}</div>
+              </div>
+            </div>
+            """
+            st.markdown(html, unsafe_allow_html=True)
             if st.button('Run', key='run_primary_disable'):
                 st.session_state['pending_action'] = 'primary_disable'
             if st.session_state.get('pending_action') == 'primary_disable':
