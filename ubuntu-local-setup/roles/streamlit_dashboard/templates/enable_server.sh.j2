@@ -42,12 +42,22 @@ done
 # Verify Samba reachability using smbclient; configured at template render time
 VERIFY_HOST={{ smb_verify_host | default(ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1')) }}
 
-log "verifying samba with smbclient against $VERIFY_HOST"
-# Capture smbclient output (use -N for no password) and print it so callers see the result
-smb_output=$(smbclient -L "${VERIFY_HOST}" -N 2>&1 || true)
-echo "$smb_output"
+log "verifying samba with smbclient against localhost, 127.0.0.1 and $VERIFY_HOST"
+# Try multiple hosts to increase chance of successful verification and show which one works
+smb_output=""
+for h in localhost 127.0.0.1 "${VERIFY_HOST}"; do
+  log "trying smbclient against $h"
+  attempt=$(smbclient -L "$h" -N 2>&1 || true)
+  echo "--- smbclient output for $h ---"
+  echo "$attempt"
+  if [ -n "$attempt" ]; then
+    smb_output="$attempt"
+    break
+  fi
+done
+
 if [ -z "$smb_output" ]; then
-  log "smbclient produced no output; verification may have failed"
+  log "smbclient produced no output on any tested host; verification may have failed"
   exit 5
 fi
 
