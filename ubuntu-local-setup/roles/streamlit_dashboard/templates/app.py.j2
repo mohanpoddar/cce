@@ -361,21 +361,34 @@ def run_command_streaming(name, command, container):
 
 
 def shell_capture(command, timeout=1.5):
+    """Run a command via `sudo -n` (non-interactive, no password prompt) and
+    return only stdout. Any failure (no TTY, missing NOPASSWD, non-zero exit,
+    timeout) returns the sentinel string ``__NOPE__`` so the UI never leaks
+    raw sudo error messages.
+    """
     try:
         out = subprocess.run(
-            ["sudo"] + shlex.split(command),
+            ["sudo", "-n"] + shlex.split(command),
             capture_output=True, text=True, timeout=timeout,
         )
-        return (out.stdout or "") + (out.stderr or "")
+        if out.returncode != 0:
+            return "__NOPE__"
+        return (out.stdout or "").strip()
     except Exception:
-        return ""
+        return "__NOPE__"
 
 
 def get_service_state(service):
-    out = shell_capture("/usr/bin/systemctl is-active " + service).strip()
+    out = shell_capture("/usr/bin/systemctl is-active " + service)
     if out in ("active", "inactive", "masked", "failed", "unknown"):
         return out
     return "unknown"
+
+
+def get_service_enabled(service):
+    """Return one of: enabled, disabled, masked, static, unknown."""
+    out = shell_capture("/usr/bin/systemctl is-enabled " + service)
+    return out if out in ("enabled", "disabled", "masked", "static", "unknown") else "unknown"
 
 
 # Initialise session state keys
@@ -565,10 +578,10 @@ with tab_overview:
                           "masked": "\u2715 masked", "failed": "\u26A0 failed"}
             klass = klass_map.get(state, "info")
             label = label_map2.get(state, "\u2022 " + state)
-            enabled_out = shell_capture("/usr/bin/systemctl is-enabled " + svc).strip()
+            enabled_out = get_service_enabled(svc)
             enabled_label_map = {"enabled": "enabled at boot", "disabled": "disabled at boot",
-                                 "masked": "masked", "static": "static"}
-            enabled_label = enabled_label_map.get(enabled_out, enabled_out or "unknown")
+                                 "masked": "masked", "static": "static", "unknown": "status unavailable"}
+            enabled_label = enabled_label_map.get(enabled_out, enabled_out)
             st.markdown(
                 "<div class='card' style='margin-bottom:12px;'>"
                 "<div style='display:flex; align-items:center; justify-content:space-between;'>"
