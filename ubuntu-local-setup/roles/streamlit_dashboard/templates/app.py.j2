@@ -71,17 +71,16 @@ def execute_and_display(name, command):
 action_index_by_command = {a['command']: i for i,a in enumerate(actions)}
 
 # Primary Enable/Disable tiles (top)
-if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/disable_server.sh' in [a['command'] for a in actions]:
+# Detect primary actions by icon or by command path ending with the script names
+enable_action = next((a for a in actions if a.get('icon')=='enable_server' or (a.get('command') and a.get('command').endswith('/scripts/enable_server.sh'))), None)
+disable_action = next((a for a in actions if a.get('icon')=='disable_server' or (a.get('command') and a.get('command').endswith('/scripts/disable_server.sh'))), None)
+if enable_action or disable_action:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     c1, c2 = st.columns([0.5,0.5])
+
     # Enable primary
-    try:
-        enable_action = next((a for a in actions if a['icon']=='enable_server'), None)
-        enable_cmd = enable_action['command'] if enable_action else None
-        enable_icon = enable_action.get('icon') if enable_action else 'enable_server'
-    except Exception:
-        enable_cmd = None
-        enable_icon = 'enable_server'
+    enable_cmd = enable_action['command'] if enable_action else None
+    enable_icon = enable_action.get('icon') if enable_action else 'enable_server'
     with c1:
         if enable_cmd:
             try:
@@ -102,13 +101,8 @@ if '/scripts/enable_server.sh' in [a['command'] for a in actions] or '/scripts/d
                     st.session_state['pending_action'] = None
 
     # Disable primary
-    try:
-        disable_action = next((a for a in actions if a['icon']=='disable_server'), None)
-        disable_cmd = disable_action['command'] if disable_action else None
-        disable_icon = disable_action.get('icon') if disable_action else 'disable_server'
-    except Exception:
-        disable_cmd = None
-        disable_icon = 'disable_server'
+    disable_cmd = disable_action['command'] if disable_action else None
+    disable_icon = disable_action.get('icon') if disable_action else 'disable_server'
     with c2:
         if disable_cmd:
             try:
