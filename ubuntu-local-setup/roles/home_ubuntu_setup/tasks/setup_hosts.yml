@@ -6,21 +6,14 @@
 
 - name: Set defaults for host mapping
   ansible.builtin.set_fact:
-    host_ip: "{{ host_ip | default(ansible_default_ipv4.address | default('127.0.0.1')) }}"
+    host_ip: "{{ host_ip | default(ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0] | default(ansible_facts['all_ipv4_addresses'][0] | default('127.0.0.1')))) }}"
     host_name: "{{ host_name | default(inventory_hostname) }}"
     host_short: "{{ (host_name.split('.') if '.' in host_name else [host_name])[0] }}"
 
-- name: Remove any existing /etc/hosts lines containing the hostname
-  ansible.builtin.replace:
-    path: /etc/hosts
-    regexp: "^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\s+.*\\b{{ host_name }}\\b.*$"
-    replace: ""
-    backup: yes
-  become: true
-
-- name: Ensure host mapping is present in /etc/hosts
+- name: Ensure host mapping is present in /etc/hosts (replace existing or append)
   ansible.builtin.lineinfile:
     path: /etc/hosts
+    regexp: '^(\\S+)\\s+.*\\b{{ host_name }}\\b.*$'
     line: "{{ host_ip }} {{ host_name }} {{ host_short }}"
     create: yes
     state: present
