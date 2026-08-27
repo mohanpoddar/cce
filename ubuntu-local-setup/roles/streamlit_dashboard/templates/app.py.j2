@@ -52,10 +52,19 @@ def execute_and_display(name, command):
     placeholder = st.empty()
     try:
         args = ['sudo'] + shlex.split(command)
-        result = subprocess.run(args, capture_output=True, text=True)
-        out = result.stdout or ''
-        err = result.stderr or ''
-        code = result.returncode
+        # Stream output live so UI shows long-running command output as it appears
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        output_lines = []
+        if proc.stdout:
+            for line in iter(proc.stdout.readline, ''):
+                if line == '':
+                    break
+                output_lines.append(line.rstrip('\n'))
+                placeholder.markdown('<div class="output">' + '<br>'.join(output_lines) + '</div>', unsafe_allow_html=True)
+            proc.stdout.close()
+        code = proc.wait()
+        out = '\n'.join(output_lines)
+        err = ''
         timestamp = __import__('datetime').datetime.utcnow().isoformat()
         log_entry = f"{timestamp} | {name} | {command} | return={code} | out={out.strip()} | err={err.strip()}"
         append_log(log_entry)
