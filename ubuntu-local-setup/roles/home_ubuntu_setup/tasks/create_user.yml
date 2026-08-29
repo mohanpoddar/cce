@@ -91,6 +91,16 @@
     group: cce
     mode: 0655
 
+# rsync_replication_daily
+- name: Copy file rsync_replication_daily.sh to {{ script_dest_dir }}/rsync_replication_daily.sh
+  ansible.builtin.copy:
+    src: "{{ script_source_dir }}/rsync_replication_daily.sh"
+    dest: "{{ script_dest_dir }}/rsync_replication_daily.sh"
+    owner: cce
+    group: cce
+    mode: 0655
+
+
 - name: Copy file monitoronedrive.sh to {{ script_dest_dir }}/monitoronedrive.sh
   ansible.builtin.copy:
     src: "{{ script_source_dir }}/monitoronedrive.sh"
