@@ -8,7 +8,7 @@ if [ "$(hostname)" = "av-pc" ]; then
     BKP_LOC_DST='/opt/backup/backup_of_opt_ccpldata_ccplnewdata_latest/'
     RSYNC_EMAIL_FILE='/home/cce/rayo/scripts/github/cceplrsyncmail.py'
 
-if [ "$(hostname)" = "av-pc-dr" ]; then
+elif [ "$(hostname)" = "av-pc-dr" ]; then
     DC="GreaterNoida"
     PS1=`ps -ef | egrep "rsync -avP /opt/ccpldata/ccplnewdata" | grep -v grep | wc -l`
     BKP_LOC_SRC='/opt/ccpldata/ccplnewdata'
