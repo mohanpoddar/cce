@@ -70,6 +70,8 @@ ccersync () {
         starttime=$(date +'%d-%m-%Y-%H%M%S')
         LOG_FILE="${RSYNC_LOG_DIR}/rsync_replication_${DC}_${starttime}.log"
 
+        echo ${LOG_FILE}
+
         echo "TASK STARTS AT : $(date)" >> "$LOG_FILE"
         echo "START rsync replication at : $(date)" >> "$LOG_FILE"
         echo "SOURCE : ${SRC}" >> "$LOG_FILE"
