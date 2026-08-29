@@ -22,8 +22,8 @@
 - name: Ensure host mapping is present in /etc/hosts (replace existing or append)
   ansible.builtin.lineinfile:
     path: /etc/hosts
-    regexp: '^(\\S+)\\s+.*\\b{{ host_name }}\\b.*$'
-    line: "{{ ip_address }} {{ host_name }} {{ host_short }}"
+    regexp: '^(\\S+)\\s+.*\\b{{ ansible_hostname }}\\b.*$'
+    line: "{{ ip_address }} {{ ansible_hostname  }}"
     create: yes
     state: present
     backup: yes
