@@ -15,11 +15,15 @@
     host_name: "{{ host_name | default(inventory_hostname) }}"
     host_short: "{{ (host_name | default(inventory_hostname)).split('.')[0] }}"
 
+- name: Ip Address passed from command line
+  debug:
+    msg: "IP Address passed from command line is {{ ip_address }}"
+
 - name: Ensure host mapping is present in /etc/hosts (replace existing or append)
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: '^(\\S+)\\s+.*\\b{{ host_name }}\\b.*$'
-    line: "{{ host_ip }} {{ host_name }} {{ host_short }}"
+    line: "{{ ip_address }} {{ host_name }} {{ host_short }}"
     create: yes
     state: present
     backup: yes
