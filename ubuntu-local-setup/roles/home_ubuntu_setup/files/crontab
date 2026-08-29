@@ -29,7 +29,7 @@ MAILTO=""
 # Rsync - Daily Backup
 ##
 # Daily ransomware-protected snapshot backup at 21:00IST
-00 21 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ccepl_backup/rsync_daily_at_evening_ransome_protect.sh 2> /home/cce/logs/rsync/cron-rsync-ransomware-protect.log
+#00 21 * * * /bin/sh /home/cce/rayo/scripts/github/cce/ccepl_backup/rsync_daily_at_evening_ransome_protect.sh 2> /home/cce/logs/rsync/cron-rsync-ransomware-protect.log
 
 # Legacy direct rsync backup jobs are kept disabled. Use the protected snapshot job above.
 # Daily afternoon backup at 13:30IST
