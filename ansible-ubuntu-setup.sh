@@ -19,7 +19,7 @@ ansible_inv_file=/etc/ansible/hosts
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
 ANSIBLE_CMD=/usr//bin/ansible-playbook
 
-while getopts h:o:u:s: option
+while getopts h:o:u:s:i: option
 do 
     case "${option}"
         in
