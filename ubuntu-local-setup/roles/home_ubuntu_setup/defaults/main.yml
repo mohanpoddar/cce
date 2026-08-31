@@ -27,3 +27,9 @@ rsync_replication_by_ip:
 rsync_replication_enabled: false
 rsync_replication_schedule: "0 2 * * *"
 rsync_replication_log_file: "/var/log/ccpl-rsync.log"
+
+# Email password should be stored in Ansible Vault and injected into the target host.
+# Example:
+#   ansible-vault create group_vars/all.vault.yml
+#   email_password: "your-app-password"
+email_password: ""

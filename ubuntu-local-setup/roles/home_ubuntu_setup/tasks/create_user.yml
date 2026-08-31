@@ -118,6 +118,23 @@
     group: cce
     mode: 0655
 
+- name: Ensure CCEPL email config directory exists
+  ansible.builtin.file:
+    path: "/etc/ccepl"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Create environment file for email password from Ansible Vault
+  ansible.builtin.template:
+    src: ccepl_rsync_email.env.j2
+    dest: "/etc/ccepl/rsync_email.env"
+    owner: root
+    group: root
+    mode: '0600'
+  when: email_password is defined and email_password | length > 0
+
 - name: Copy file cceplrsyncmail_ransome.py to {{ script_dest_dir }}/cceplrsyncmail_ransome.py
   ansible.builtin.copy:
     src: "{{ script_source_dir }}/cceplrsyncmail_ransome.py"

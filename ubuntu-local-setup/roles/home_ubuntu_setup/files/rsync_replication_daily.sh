@@ -93,11 +93,21 @@ ccersync () {
         if [ "$status" -eq 0 ]; then
             echo "Replication finished successfully at $(date)"
             if [ -f "$RSYNC_EMAIL_FILE" ]; then
+                if [ -f "/etc/ccepl/rsync_email.env" ]; then
+                    set -a
+                    . /etc/ccepl/rsync_email.env
+                    set +a
+                fi
                 python3 "$RSYNC_EMAIL_FILE"
             fi
         else
             echo "Replication failed with exit code ${status} at $(date)"
             if [ -f "$RSYNC_EMAIL_FILE" ]; then
+                if [ -f "/etc/ccepl/rsync_email.env" ]; then
+                    set -a
+                    . /etc/ccepl/rsync_email.env
+                    set +a
+                fi
                 python3 "$RSYNC_EMAIL_FILE"
             fi
             return "$status"
