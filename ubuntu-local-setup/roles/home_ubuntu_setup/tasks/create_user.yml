@@ -81,7 +81,7 @@
     dest: "{{ script_dest_dir }}/rsync_daily.sh"
     owner: cce
     group: cce
-    mode: 0655
+    mode: 0755
 
 - name: Copy file rsync_daily_at_evening.sh to {{ script_dest_dir }}/rsync_daily_at_evening.sh
   ansible.builtin.copy:
@@ -89,7 +89,7 @@
     dest: "{{ script_dest_dir }}/rsync_daily_at_evening.sh"
     owner: cce
     group: cce
-    mode: 0655
+    mode: 0755
 
 # rsync_replication_daily
 - name: Copy file rsync_replication_daily.sh to {{ script_dest_dir }}/rsync_replication_daily.sh
@@ -98,7 +98,7 @@
     dest: "{{ script_dest_dir }}/rsync_replication_daily.sh"
     owner: cce
     group: cce
-    mode: 0655
+    mode: 0755
 
 
 - name: Copy file monitoronedrive.sh to {{ script_dest_dir }}/monitoronedrive.sh
