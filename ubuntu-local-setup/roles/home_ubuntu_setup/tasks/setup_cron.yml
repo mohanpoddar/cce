@@ -47,7 +47,7 @@
     executable: /bin/bash
   register: crontab_result
   changed_when: "'CHANGED' in crontab_result.stdout"
-  when: current_rsync_config is not defined
+  when: current_rsync_config is defined
 
 - name: Create system cron file for rsync replication based on passed IP
   ansible.builtin.template:
