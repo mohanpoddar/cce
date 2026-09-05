@@ -72,3 +72,29 @@
     - "{{ target_cron_user }}.crontab"
     - "{{ target_cron_user }}.crontab.current"
   when: crontab_result is defined or current_rsync_config is defined
+
+# Enable cron rsync for prod
+- name: Copy production crontab to /etc/cron.d/crontab_rsync_prod
+  ansible.builtin.copy:
+    src: crontab_rsync_prod
+    dest: /etc/cron.d/crontab_rsync_prod
+    mode: '0644'
+    owner: root
+    group: root
+  when:
+    - live_samba_server_status | bool
+    - rsync_replication_enabled | bool
+    - ip_address is defined
+
+# Enable cron rsync for DR
+- name: Copy DR crontab to /etc/cron.d/crontab_rsync_dr
+  ansible.builtin.copy:
+    src: crontab_rsync_dr
+    dest: /etc/cron.d/crontab_rsync_dr
+    mode: '0644'
+    owner: root
+    group: root
+  when:
+    - not (live_samba_server_status | bool)
+    - rsync_replication_enabled | bool
+    - ip_address is defined

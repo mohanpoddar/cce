@@ -4,8 +4,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Replication cron is disabled by default.
 # Enable by setting rsync_replication_enabled=true and keeping this entry active.
 {% if rsync_replication_enabled | bool and current_rsync_config is defined -%}
-{{ rsync_replication_schedule }} root RSYNC_SOURCE="cce@{{ source_ip_prod }}:{{ current_rsync_config.source }}" RSYNC_DEST="{{ current_rsync_config.source }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
-{{ rsync_replication_schedule }} root RSYNC_SOURCE="{{ current_rsync_config.source }}" RSYNC_DEST="{{ current_rsync_config.destination }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
+{{ rsync_replication_schedule }} cce RSYNC_SOURCE="cce@{{ source_ip_prod }}:{{ current_rsync_config.source }}" RSYNC_DEST="{{ current_rsync_config.source }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
+{{ rsync_replication_schedule }} cce RSYNC_SOURCE="{{ current_rsync_config.source }}" RSYNC_DEST="{{ current_rsync_config.destination }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
 {% else -%}
-# {{ rsync_replication_schedule }} root RSYNC_SOURCE="{{ current_rsync_config.source | default('') }}" RSYNC_DEST="{{ current_rsync_config.destination | default('') }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
+# {{ rsync_replication_schedule }} cce RSYNC_SOURCE="{{ current_rsync_config.source | default('') }}" RSYNC_DEST="{{ current_rsync_config.destination | default('') }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
 {% endif %}
