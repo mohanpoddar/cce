@@ -43,6 +43,17 @@ log "Copying backup cron job file"
 cp /home/cce/rayo/scripts/github/crontab_rsync_disable /etc/cron.d/crontab_rsync_disable
 ls -l /etc/cron.d/crontab_rsync_disable || { log "failed to copy cron job file"; exit 6; }
 
+# Remove /etc/cron.d/crontab_rsync_common and /etc/cron.d/crontab_rsync_enable if they exist
+if [ -f /etc/cron.d/crontab_rsync_common ]; then
+  log "Removing /etc/cron.d/crontab_rsync_common"
+  rm -f /etc/cron.d/crontab_rsync_common || { log "failed to remove /etc/cron.d/crontab_rsync_common"; exit 7; }
+fi
+
+if [ -f /etc/cron.d/crontab_rsync_enable ]; then
+  log "Removing /etc/cron.d/crontab_rsync_enable"
+  rm -f /etc/cron.d/crontab_rsync_enable || { log "failed to remove /etc/cron.d/crontab_rsync_enable"; exit 7; }
+fi
+
 # Copy cron job for replication jobs and verify that it exists
 log "Copying replication cron job file"
 cp /home/cce/rayo/scripts/github/cce_rsync_replication_disabled /etc/cron.d/cce_rsync_replication_disabled

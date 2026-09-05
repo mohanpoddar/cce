@@ -70,10 +70,26 @@ log "Copying backup cron job file"
 cp /home/cce/rayo/scripts/github/crontab_rsync_enable /etc/cron.d/crontab_rsync_enable
 ls -l /etc/cron.d/crontab_rsync_enable || { log "failed to copy cron job file"; exit 6; }
 
+# Remove /etc/cron.d/crontab_rsync_common and /etc/cron.d/crontab_rsync_disable if they exist
+if [ -f /etc/cron.d/crontab_rsync_common ]; then
+  log "Removing /etc/cron.d/crontab_rsync_common"
+  rm -f /etc/cron.d/crontab_rsync_common || { log "failed to remove /etc/cron.d/crontab_rsync_common"; exit 7; }
+fi
+
+if [ -f /etc/cron.d/crontab_rsync_disable ]; then
+  log "Removing /etc/cron.d/crontab_rsync_disable"
+  rm -f /etc/cron.d/crontab_rsync_disable || { log "failed to remove /etc/cron.d/crontab_rsync_disable"; exit 7; }
+fi
+
 # Copy cron job for replication jobs and verify that it exists
 log "Copying replication cron job file"
 cp /home/cce/rayo/scripts/github/cce_rsync_replication_enabled /etc/cron.d/cce_rsync_replication_enabled
 ls -l /etc/cron.d/cce_rsync_replication_enabled || { log "failed to copy cron job file"; exit 7; }
+# Remove /etc/cron.d/cce_rsync_replication_disabled if it exists
+if [ -f /etc/cron.d/cce_rsync_replication_disabled ]; then
+  log "Removing /etc/cron.d/cce_rsync_replication_disabled"
+  rm -f /etc/cron.d/cce_rsync_replication_disabled || { log "failed to remove /etc/cron.d/cce_rsync_replication_disabled"; exit 8; }
+fi
 
 log "Enable server completed successfully. Continue accessing the data server."
 log "This is the live data server now."
