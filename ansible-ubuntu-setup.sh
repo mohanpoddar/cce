@@ -186,7 +186,7 @@ EOF
 
 # # # Calling functions
 echo -e "Calling functions apt_update .......\n"
-apt_update
+# apt_update
 
 echo -e "Calling functions pkg_install .......\n"
 pkg_install
