@@ -18,3 +18,37 @@
     backup: yes
     insertafter: EOF
   become: true
+
+- name: Ensure replication host alias is present in /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^\S+\s+{{ replication_host_alias | regex_escape }}$'
+    line: "{{ ip_address }} {{ replication_host_alias }}"
+    create: true
+    state: present
+    backup: true
+    insertafter: EOF
+  vars:
+    replication_host_alias: "{{ 'prod-rsync' if environment == 'prod' else 'dr-rsync' }}"
+  when:
+    - environment in ['prod', 'dr']
+    - ip_address is defined
+    - ip_address | length > 0
+  become: true
+
+- name: Add commented replication peer instruction to /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^#<[^>]+>\s+{{ peer_host_alias | regex_escape }}$'
+    line: "#<{{ peer_ip_placeholder }}> {{ peer_host_alias }}"
+    create: true
+    state: present
+    insertafter: EOF
+  vars:
+    peer_host_alias: "{{ 'dr-rsync' if environment == 'prod' else 'prod-rsync' }}"
+    peer_ip_placeholder: "{{ 'dr_ip_address' if environment == 'prod' else 'prod_ip_address' }}"
+  when:
+    - environment in ['prod', 'dr']
+    - ip_address is defined
+    - ip_address | length > 0
+  become: true
