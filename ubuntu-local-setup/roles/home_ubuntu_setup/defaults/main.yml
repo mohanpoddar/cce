@@ -4,23 +4,10 @@
 # Do not install grub-customizer by default on servers
 install_grub_customizer: false
 
-# Global replication variables
-source_ip_prod: "192.168.10.239"
-source_ip_dr: "192.168.10.219"
-
-direction_prod_to_dr: "prod_to_dr"
-direction_dr_to_prod: "dr_to_prod"
-
-rsync_replication_by_ip:
-  "192.168.10.239":
-    source: "cce@192.168.10.239:/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
-    destination: "/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
-    direction: "{{ direction_prod_to_dr }}"
-
-  "192.168.10.219":
-    source: "/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
-    destination: "cce@192.168.10.219:/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
-    direction: "{{ direction_dr_to_prod }}"
+# Stable names must resolve through /etc/hosts on both servers.
+prod_peer_host: prod-rsync
+dr_peer_host: dr-rsync
+rsync_data_path: /opt/ccpldata/ccplnewdata/CCEPL_SERVER/
 
 # Replication is disabled by default because it is risky.
 # Enable explicitly through an application or inventory override when needed.

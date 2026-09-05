@@ -17,7 +17,7 @@ ansible_config_file=/usr/bin/ansible
 ansible_inv_file=/etc/ansible/hosts
 
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
-ANSIBLE_CMD=/usr//bin/ansible-playbook
+ANSIBLE_CMD=/usr/bin/ansible-playbook
 
 while getopts h:o:u:s:i:e: option
 do 
@@ -213,7 +213,7 @@ $ANSIBLE_CMD -l localhost \
   -e "live_samba_server_status=$live_samba_server_status" \
   -e "ip_address=$ip_address" \
   -e "environment=$environment" \
-  -e "rsync_replication_enabled=true" \
+    -e "rsync_replication_enabled=false" \
   "$PLAYBOOK"
 
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
