@@ -4,7 +4,10 @@ import smtplib
 import subprocess
 from datetime import datetime
 from email.message import EmailMessage
-from datetime import datetime
+
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "")
+if not EMAIL_PASSWORD:
+    raise RuntimeError("EMAIL_PASSWORD is not set. Configure it through Ansible Vault and inject /etc/ccepl/rsync_email.env")
 
 HOSTNAME = subprocess.run("hostname", shell=True, capture_output=True, text=True).stdout.strip()
 print("HOSTNAME:", HOSTNAME)
@@ -64,7 +67,8 @@ if latest_log_cron_path.split('_')[-1] != latest_rsync_actual_log_path.split('_'
 def send_email(subject, to, cc=None):
     # Email configuration
     email_user = 'learnersepoint@gmail.com'
-    email_password = 'xgao djru pwpb uhxz'  # Use an App Password for better security
+    # email_password = 'xgao djru pwpb uhxz'
+    email_password = EMAIL_PASSWORD
     email_server = 'smtp.gmail.com'
     email_port = 587
 
@@ -247,7 +251,7 @@ def send_email(subject, to, cc=None):
 def send_error_email(subject, to, cc=None):
     # Email configuration
     email_user = 'learnersepoint@gmail.com'
-    email_password = 'xgao djru pwpb uhxz'  # Use an App Password for better security
+    email_password = EMAIL_PASSWORD
     email_server = 'smtp.gmail.com'
     email_port = 587
 

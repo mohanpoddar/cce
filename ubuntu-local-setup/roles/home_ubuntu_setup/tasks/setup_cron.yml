@@ -3,6 +3,16 @@
   set_fact:
     target_cron_user: "{{ orgusername | default('cce') }}"
 
+- name: Set current rsync replication config by target IP
+  set_fact:
+    current_rsync_config: "{{ rsync_replication_by_ip[ip_address] }}"
+  when: ip_address is defined and ip_address | length > 0
+
+- name: Fail when IP does not match any replication config
+  ansible.builtin.fail:
+    msg: "No rsync replication config found for IP {{ ip_address }}"
+  when: ip_address is defined and ip_address | length > 0 and current_rsync_config is not defined
+
 - name: Read existing crontab for target user
   ansible.builtin.shell:
     cmd: "crontab -l -u {{ target_cron_user }}"
@@ -24,7 +34,7 @@
     owner: root
     group: root
 
-- name: Install crontab for user if different
+- name: Update crontab with existing template if replication config is not defined
   ansible.builtin.shell: |
     set -o pipefail
     if ! diff -q /tmp/{{ target_cron_user }}.crontab /tmp/{{ target_cron_user }}.crontab.current >/dev/null 2>&1; then
@@ -37,6 +47,22 @@
     executable: /bin/bash
   register: crontab_result
   changed_when: "'CHANGED' in crontab_result.stdout"
+  when: current_rsync_config is defined
+
+- name: Create system cron file for rsync replication based on passed IP
+  ansible.builtin.template:
+    src: cce_rsync_replication.j2
+    dest: "/etc/cron.d/cce_rsync_replication"
+    owner: root
+    group: root
+    mode: '0644'
+  when: rsync_replication_enabled | bool and current_rsync_config is defined
+
+- name: Remove replication cron file when replication is disabled
+  ansible.builtin.file:
+    path: "/etc/cron.d/cce_rsync_replication"
+    state: absent
+  when: not (rsync_replication_enabled | bool)
 
 - name: Remove temporary crontab files
   ansible.builtin.file:
@@ -45,4 +71,30 @@
   loop:
     - "{{ target_cron_user }}.crontab"
     - "{{ target_cron_user }}.crontab.current"
-  when: crontab_result is defined
+  when: crontab_result is defined or current_rsync_config is defined
+
+# Enable cron rsync for prod
+- name: Copy production crontab to /etc/cron.d/crontab_rsync_prod
+  ansible.builtin.copy:
+    src: crontab_rsync_prod
+    dest: /etc/cron.d/crontab_rsync_prod
+    mode: '0644'
+    owner: root
+    group: root
+  when:
+    - live_samba_server_status | bool
+    - rsync_replication_enabled | bool
+    - ip_address is defined
+
+# Enable cron rsync for DR
+- name: Copy DR crontab to /etc/cron.d/crontab_rsync_dr
+  ansible.builtin.copy:
+    src: crontab_rsync_dr
+    dest: /etc/cron.d/crontab_rsync_dr
+    mode: '0644'
+    owner: root
+    group: root
+  when:
+    - not (live_samba_server_status | bool)
+    - rsync_replication_enabled | bool
+    - ip_address is defined

@@ -3,3 +3,33 @@
 
 # Do not install grub-customizer by default on servers
 install_grub_customizer: false
+
+# Global replication variables
+source_ip_prod: "192.168.10.239"
+source_ip_dr: "192.168.10.219"
+
+direction_prod_to_dr: "prod_to_dr"
+direction_dr_to_prod: "dr_to_prod"
+
+rsync_replication_by_ip:
+  "192.168.10.239":
+    source: "cce@192.168.10.239:/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
+    destination: "/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
+    direction: "{{ direction_prod_to_dr }}"
+
+  "192.168.10.219":
+    source: "/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
+    destination: "cce@192.168.10.219:/opt/ccpldata/ccplnewdata/CCEPL_SERVER/"
+    direction: "{{ direction_dr_to_prod }}"
+
+# Replication is disabled by default because it is risky.
+# Enable explicitly through an application or inventory override when needed.
+rsync_replication_enabled: false
+rsync_replication_schedule: "#0 2 * * *"
+rsync_replication_log_file: "/var/tmp/ccpl-rsync.log"
+
+# Email password should be stored in Ansible Vault and injected into the target host.
+# Example:
+#   ansible-vault create group_vars/all.vault.yml
+#   email_password: "your-app-password"
+email_password: ""
