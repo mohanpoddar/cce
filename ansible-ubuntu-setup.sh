@@ -19,15 +19,16 @@ ansible_inv_file=/etc/ansible/hosts
 PLAYBOOK=ubuntu-local-setup/ubuntu_setup.yml
 ANSIBLE_CMD=/usr//bin/ansible-playbook
 
-while getopts h:o:u:s:i: option
+while getopts h:o:u:s:i:e: option
 do 
     case "${option}"
         in
-        h)hostname=${OPTARG};;
-        o)orgusername=${OPTARG};;
-        u)username=${OPTARG};;
-        s)live_samba_server_status=${OPTARG};;
-        i)ip_address=${OPTARG};;
+        h) hostname=${OPTARG};;
+        o) orgusername=${OPTARG};;
+        u) username=${OPTARG};;
+        s) live_samba_server_status=${OPTARG};;
+        i) ip_address=${OPTARG};;
+        e) environment=${OPTARG} ;;
     esac
 done
 
@@ -204,8 +205,20 @@ configure_ansible
 
 
 echo -e "Ansible role begins.......\n"
-$ANSIBLE_CMD -l localhost -e "ansible_python_interpreter=/usr/bin/python3" -e "username=$username" -e "live_samba_server_status=$live_samba_server_status" -e "ip_address=$ip_address" -e "rsync_replication_enabled=true" $PLAYBOOK
+#$ANSIBLE_CMD -l localhost -e "ansible_python_interpreter=/usr/bin/python3" -e "username=$username" -e "environment=$environment" -e "live_samba_server_status=$live_samba_server_status" -e "ip_address=$ip_address" -e "rsync_replication_enabled=true" $PLAYBOOK
+
+$ANSIBLE_CMD -l localhost \
+  -e "ansible_python_interpreter=/usr/bin/python3" \
+  -e "username=$username" \
+  -e "live_samba_server_status=$live_samba_server_status" \
+  -e "ip_address=$ip_address" \
+  -e "environment=$environment" \
+  -e "rsync_replication_enabled=true" \
+  "$PLAYBOOK"
+
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
+
+
 
 echo -e "\nAnsible role ends......."
 echo -e "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
