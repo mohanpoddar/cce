@@ -119,6 +119,7 @@
     owner: root
     group: root
     mode: '0644'
+  when: deployment_environment in ['prod', 'dr']
 
 - name: Create system replication disabled cron file for rsync replication
   ansible.builtin.template:
@@ -127,6 +128,7 @@
     owner: root
     group: root
     mode: '0644'
+  when: deployment_environment in ['prod', 'dr']
 
 
 - name: Copy file monitoronedrive.sh to {{ script_dest_dir }}/monitoronedrive.sh
