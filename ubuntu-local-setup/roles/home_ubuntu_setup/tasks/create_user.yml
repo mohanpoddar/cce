@@ -106,7 +106,7 @@
     dest: "{{ script_dest_dir }}/{{ item }}"
     owner: cce
     group: cce
-    mode: 0755
+    mode: 0644
   loop:
     - crontab_rsync_enable
     - crontab_rsync_disable
