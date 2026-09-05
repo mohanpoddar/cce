@@ -70,23 +70,10 @@
   when: crontab_result is defined
 
 # Enable cron rsync for prod
-- name: Copy production crontab to /etc/cron.d/crontab_rsync_prod
+- name: Copy common crontab to /etc/cron.d/crontab_rsync_common
   ansible.builtin.copy:
-    src: crontab_rsync_prod
-    dest: /etc/cron.d/crontab_rsync_prod
+    src: crontab_rsync_common
+    dest: /etc/cron.d/crontab_rsync_common
     mode: '0644'
     owner: root
     group: root
-  when:
-    - deployment_environment == 'prod'
-
-# Enable cron rsync for DR
-- name: Copy DR crontab to /etc/cron.d/crontab_rsync_dr
-  ansible.builtin.copy:
-    src: crontab_rsync_dr
-    dest: /etc/cron.d/crontab_rsync_dr
-    mode: '0644'
-    owner: root
-    group: root
-  when:
-    - deployment_environment == 'dr'

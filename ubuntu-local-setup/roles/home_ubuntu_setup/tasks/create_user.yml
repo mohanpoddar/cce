@@ -100,6 +100,18 @@
     group: cce
     mode: 0755
 
+- name: Copy cron files to {{ script_dest_dir }}
+  ansible.builtin.copy:
+    src: "{{ script_source_dir }}/{{ item }}"
+    dest: "{{ script_dest_dir }}/{{ item }}"
+    owner: cce
+    group: cce
+    mode: 0755
+  loop:
+    - crontab_rsync_prod_enable
+    - crontab_rsync_prod_disable
+    - crontab_rsync_dr_enable
+    - crontab_rsync_dr_disable
 
 - name: Copy file monitoronedrive.sh to {{ script_dest_dir }}/monitoronedrive.sh
   ansible.builtin.copy:
