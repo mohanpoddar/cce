@@ -213,7 +213,7 @@ $ANSIBLE_CMD -l localhost \
   -e "live_samba_server_status=$live_samba_server_status" \
   -e "ip_address=$ip_address" \
   -e "environment=$environment" \
-    -e "rsync_replication_enabled=false" \
+  -e "rsync_replication_enabled=false" \
   "$PLAYBOOK"
 
 #ansible-playbook -l mylearnersepoint $PLAYBOOK -u root --private-key $key
