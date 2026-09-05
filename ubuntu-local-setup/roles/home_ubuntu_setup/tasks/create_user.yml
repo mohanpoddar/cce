@@ -114,7 +114,7 @@
 
 - name: Create system replication enabled cron file for rsync replication
   ansible.builtin.template:
-    src: "{{ script_source_dir }}/cce_rsync_replication_enabled.j2"
+    src: cce_rsync_replication_enabled.j2
     dest: "{{ script_dest_dir }}/cce_rsync_replication_enabled"
     owner: root
     group: root
@@ -122,7 +122,7 @@
 
 - name: Create system replication disabled cron file for rsync replication
   ansible.builtin.template:
-    src: "{{ script_source_dir }}/cce_rsync_replication_disabled.j2"
+    src: cce_rsync_replication_disabled.j2
     dest: "{{ script_dest_dir }}/cce_rsync_replication_disabled"
     owner: root
     group: root
