@@ -1,6 +1,13 @@
 ---
 # tasks file for home_ubuntu_setup
 
+- name: Set replication peer host from deployment environment
+  ansible.builtin.set_fact:
+    peer_host: "{{ dr_peer_host if deployment_environment == 'prod' else prod_peer_host }}"
+  when:
+    - deployment_environment is defined
+    - deployment_environment in ['prod', 'dr']
+
 # Include palybook tasks
 #The loop_control parameter with loop_var can be used to define your own variable for each item in the list. 
 #In this example, the files variable is used for each item in the list instead of the {{ item }} variable.

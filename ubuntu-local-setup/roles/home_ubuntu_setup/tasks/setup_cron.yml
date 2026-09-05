@@ -12,10 +12,6 @@
       - ip_address | length > 0
     fail_msg: "Pass deployment_environment as prod or dr and provide ip_address"
 
-- name: Set replication peer host from environment
-  ansible.builtin.set_fact:
-    peer_host: "{{ dr_peer_host if deployment_environment == 'prod' else prod_peer_host }}"
-
 - name: Read existing crontab for target user
   ansible.builtin.shell:
     cmd: "crontab -l -u {{ target_cron_user }}"
