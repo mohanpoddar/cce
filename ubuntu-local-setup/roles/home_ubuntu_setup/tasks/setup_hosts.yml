@@ -29,9 +29,9 @@
     backup: true
     insertafter: EOF
   vars:
-    replication_host_alias: "{{ 'prod-rsync' if environment == 'prod' else 'dr-rsync' }}"
+    replication_host_alias: "{{ 'prod-rsync' if deployment_environment == 'prod' else 'dr-rsync' }}"
   when:
-    - environment in ['prod', 'dr']
+    - deployment_environment in ['prod', 'dr']
     - ip_address is defined
     - ip_address | length > 0
   become: true
@@ -45,10 +45,10 @@
     state: present
     insertafter: EOF
   vars:
-    peer_host_alias: "{{ 'dr-rsync' if environment == 'prod' else 'prod-rsync' }}"
-    peer_ip_placeholder: "{{ 'dr_ip_address' if environment == 'prod' else 'prod_ip_address' }}"
+    peer_host_alias: "{{ 'dr-rsync' if deployment_environment == 'prod' else 'prod-rsync' }}"
+    peer_ip_placeholder: "{{ 'dr_ip_address' if deployment_environment == 'prod' else 'prod_ip_address' }}"
   when:
-    - environment in ['prod', 'dr']
+    - deployment_environment in ['prod', 'dr']
     - ip_address is defined
     - ip_address | length > 0
   become: true

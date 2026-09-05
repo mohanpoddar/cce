@@ -2,7 +2,7 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # The default schedule is commented. Uncomment it manually when replication is approved.
-{% if environment == 'prod' -%}
+{% if deployment_environment == 'prod' -%}
 {{ rsync_replication_schedule }} cce RSYNC_SOURCE="cce@{{ peer_host }}:{{ rsync_data_path }}" RSYNC_DEST="{{ rsync_data_path }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1
 {% else -%}
 {{ rsync_replication_schedule }} cce RSYNC_SOURCE="{{ rsync_data_path }}" RSYNC_DEST="cce@{{ peer_host }}:{{ rsync_data_path }}" /home/cce/rayo/scripts/github/rsync_replication_daily.sh >> {{ rsync_replication_log_file }} 2>&1

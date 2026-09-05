@@ -6,15 +6,15 @@
 - name: Validate replication environment
   ansible.builtin.assert:
     that:
-      - environment is defined
-      - environment in ['prod', 'dr']
+      - deployment_environment is defined
+      - deployment_environment in ['prod', 'dr']
       - ip_address is defined
       - ip_address | length > 0
-    fail_msg: "Pass environment as prod or dr and provide ip_address"
+    fail_msg: "Pass deployment_environment as prod or dr and provide ip_address"
 
 - name: Set replication peer host from environment
   ansible.builtin.set_fact:
-    peer_host: "{{ dr_peer_host if environment == 'prod' else prod_peer_host }}"
+    peer_host: "{{ dr_peer_host if deployment_environment == 'prod' else prod_peer_host }}"
 
 - name: Read existing crontab for target user
   ansible.builtin.shell:
@@ -58,7 +58,7 @@
     owner: root
     group: root
     mode: '0644'
-  when: environment in ['prod', 'dr']
+  when: deployment_environment in ['prod', 'dr']
 
 - name: Remove temporary crontab files
   ansible.builtin.file:
@@ -78,7 +78,7 @@
     owner: root
     group: root
   when:
-    - environment == 'prod'
+    - deployment_environment == 'prod'
 
 # Enable cron rsync for DR
 - name: Copy DR crontab to /etc/cron.d/crontab_rsync_dr
@@ -89,4 +89,4 @@
     owner: root
     group: root
   when:
-    - environment == 'dr'
+    - deployment_environment == 'dr'

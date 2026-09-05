@@ -28,7 +28,7 @@ do
         u) username=${OPTARG};;
         s) live_samba_server_status=${OPTARG};;
         i) ip_address=${OPTARG};;
-        e) environment=${OPTARG} ;;
+        e) deployment_environment=${OPTARG,,} ;;
     esac
 done
 
@@ -212,7 +212,7 @@ $ANSIBLE_CMD -l localhost \
   -e "username=$username" \
   -e "live_samba_server_status=$live_samba_server_status" \
   -e "ip_address=$ip_address" \
-  -e "environment=$environment" \
+    -e "deployment_environment=$deployment_environment" \
   -e "rsync_replication_enabled=false" \
   "$PLAYBOOK"
 
