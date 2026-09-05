@@ -51,10 +51,10 @@
   register: crontab_result
   changed_when: "'CHANGED' in crontab_result.stdout"
 
-- name: Create system cron file for rsync replication
+- name: Create system replication disabled by default cron file for rsync replication.
   ansible.builtin.template:
-    src: cce_rsync_replication.j2
-    dest: "/etc/cron.d/cce_rsync_replication"
+    src: cce_rsync_replication_disabled.j2
+    dest: "/etc/cron.d/cce_rsync_replication_disabled"
     owner: root
     group: root
     mode: '0644'

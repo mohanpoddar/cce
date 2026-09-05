@@ -36,4 +36,17 @@ log "checking smbclient output against $VERIFY_HOST (expected: not serving)"
 smb_output=$(smbclient -L "${VERIFY_HOST}" -N 2>&1 || true)
 echo "$smb_output"
 
-log "disable_server completed"
+log "Disable Samba server completed"
+
+# Copy cron job file for backup jobs and verify that it exists
+log "Copying backup cron job file"
+cp /home/cce/rayo/scripts/github/crontab_rsync_disable /etc/cron.d/crontab_rsync_disable
+ls -l /etc/cron.d/crontab_rsync_disable || { log "failed to copy cron job file"; exit 6; }
+
+# Copy cron job for replication jobs and verify that it exists
+log "Copying replication cron job file"
+cp /home/cce/rayo/scripts/github/cce_rsync_replication_disabled /etc/cron.d/cce_rsync_replication_disabled
+ls -l /etc/cron.d/cce_rsync_replication_disabled || { log "failed to copy cron job file"; exit 7; }
+
+log "Disable server completed successfully. Continue accessing the data server."
+log "This is the live data server now."

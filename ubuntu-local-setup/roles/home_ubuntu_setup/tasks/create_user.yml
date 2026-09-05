@@ -108,10 +108,26 @@
     group: cce
     mode: 0755
   loop:
-    - crontab_rsync_prod_enable
-    - crontab_rsync_prod_disable
-    - crontab_rsync_dr_enable
-    - crontab_rsync_dr_disable
+    - crontab_rsync_enable
+    - crontab_rsync_disable
+
+
+- name: Create system replication enabled cron file for rsync replication
+  ansible.builtin.template:
+    src: "{{ script_source_dir }}/cce_rsync_replication_enabled.j2"
+    dest: "{{ script_dest_dir }}/cce_rsync_replication_enabled"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create system replication disabled cron file for rsync replication
+  ansible.builtin.template:
+    src: "{{ script_source_dir }}/cce_rsync_replication_disabled.j2"
+    dest: "{{ script_dest_dir }}/cce_rsync_replication_disabled"
+    owner: root
+    group: root
+    mode: '0644'
+
 
 - name: Copy file monitoronedrive.sh to {{ script_dest_dir }}/monitoronedrive.sh
   ansible.builtin.copy:

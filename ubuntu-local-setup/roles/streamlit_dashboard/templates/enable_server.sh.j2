@@ -63,4 +63,17 @@ if [ -z "$smb_output" ]; then
   exit 5
 fi
 
-log "enable_server completed"
+log "Enable Samba server completed"
+
+# Copy cron job file for backup jobs and verify that it exists
+log "Copying backup cron job file"
+cp /home/cce/rayo/scripts/github/crontab_rsync_enable /etc/cron.d/crontab_rsync_enable
+ls -l /etc/cron.d/crontab_rsync_enable || { log "failed to copy cron job file"; exit 6; }
+
+# Copy cron job for replication jobs and verify that it exists
+log "Copying replication cron job file"
+cp /home/cce/rayo/scripts/github/cce_rsync_replication_enabled /etc/cron.d/cce_rsync_replication_enabled
+ls -l /etc/cron.d/cce_rsync_replication_enabled || { log "failed to copy cron job file"; exit 7; }
+
+log "Enable server completed successfully. Continue accessing the data server."
+log "This is the live data server now."
